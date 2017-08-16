@@ -1,0 +1,21 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'DevAppBeta' do
+  # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
+  use_frameworks!
+  pod 'CorePlot', '~> 2.2'
+
+  # Pods for DevAppBeta
+
+  target 'DevAppBetaTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  target 'DevAppBetaUITests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+end

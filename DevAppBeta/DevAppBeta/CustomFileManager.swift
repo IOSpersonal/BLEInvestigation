@@ -33,4 +33,19 @@ class CustomFileManager: NSObject {
         
     }
     
+    func flushDocDir(){
+        let fileManager = FileManager.default
+        let dirPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        do{
+            let filePaths = try fileManager.contentsOfDirectory(atPath: dirPath)
+            for filePath in filePaths{
+                try fileManager.removeItem(atPath: dirPath + "/" + filePath)
+            }
+        } catch let error as NSError {
+            print("[DEBUG] file remove failed with error \(error)")
+        }
+        
+        
+    }
+    
 }

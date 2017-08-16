@@ -26,12 +26,14 @@ extension Data{
 
 class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
-    let MDM_SERVICE_UUID = "00000005-0008-A8BA-E311-F48C90364D99"
-    let MDM_COMMAND_UUID = "00000006-0008-A8BA-E311-F48C90364D99"
-    let MDM_STREAMDATA_UUID = "00000010-0008-A8BA-E311-F48C90364D99"
-    let MDM_OFFLOAD_UUID = "00000011-0008-A8BA-E311-F48C90364D99"
-    let MDM_OFFLOADDATA_UUID = "00000012-0008-A8BA-E311-F48C90364D99"
-    //let MDM_FETCHLOSTDATA_UUID = "00000013-0008-A8BA-E311-F48C90364D99"
+    let MDM_SERVICE_UUID            = "00000005-0008-A8BA-E311-F48C90364D99"
+    let MDM_COMMAND_UUID            = "00000006-0008-A8BA-E311-F48C90364D99"
+    let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
+    let MDM_SCALE_UUID              = "0000000A-0008-A8BA-E311-F48C90364D99"
+    let MDM_OFFLOAD_UUID            = "00000011-0008-A8BA-E311-F48C90364D99"
+    let MDM_OFFLOADDATA_UUID        = "00000012-0008-A8BA-E311-F48C90364D99"
+    
+    //let MDM_FETCHLOSTDATA_UUID = "00000013-0008-A8BA-E311-F48C90364D99" //DEPRECIATED
     
     var delegate: BLEDelegate?
     var mainViewController: ViewController?
@@ -49,10 +51,13 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var RSSICompletionHandler: ((NSNumber?, NSError?) -> ())?
     //string for saving all offloaded data
     private      var offloadString = ""
+    private      var streamString = ""
     //for fetching specific lost packet
-    private      var fetchIndex = 0;
+    private      var fetchIndex = 0
     //bool flag for checking offload finished for fetching lost data
     private      var isOffloadFinished = false
+    //accelerometer scale
+    private      var accScale = 1.0
     
     override init() {
         super.init()
@@ -98,7 +103,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         return true
     }
-
+    func stopScanning(){
+        if self.centralManager.state != .poweredOn {
+            print("[ERROR] Couldn´t stop scanning")
+        }
+        print("[DEBUG] Stop Scanning")
+        self.centralManager.stopScan()
+    }
+    
     func connectToPeripheral(peripheral: CBPeripheral) -> Bool {
         
         if self.centralManager.state != .poweredOn {
@@ -126,6 +138,19 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         return true
     }
+    
+    func disconnectAllPeripheral() -> Bool {
+        print("[DEBUG] disconnect from all peripheral")
+        if self.centralManager.state != .poweredOn {
+            
+            print("[ERROR] Couldn´t disconnect from peripheral")
+            return false
+        }
+        
+        self.centralManager.cancelPeripheralConnection(self.activePeripheral!)
+        
+        return true
+    }
 
     func enableNotifications(enable: Bool) {
         print("[DEBUG] enable notification for sensor")
@@ -147,12 +172,17 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         let data = Data(bytes: [0x01])
         guard let char = self.characteristics[MDM_COMMAND_UUID] else {return}
         self.activePeripheral?.writeValue(data, for: char, type: .withResponse)
+        let filename = (self.activePeripheral?.name!)! + "_stream.txt"
+        globalVariables.FileHandler.setFileName(filename: filename)
     }
     
     func stopStreaming(){
         let data = Data(bytes: [0x02])
         guard let char = self.characteristics[MDM_COMMAND_UUID] else {return}
         self.activePeripheral?.writeValue(data, for: char, type: .withResponse)
+        globalVariables.appStatus = "streamComplete"
+        self.BLEViewController?.updateStatus(value: "streamComplete, writing to file")
+        globalVariables.FileHandler.writeFile(filename: globalVariables.FileHandler.filename!, text: self.streamString)
     }
     
     func offloadCompressedData(){
@@ -256,7 +286,11 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         
         for service in peripheral.services! {
-            let theCharacteristics = [CBUUID(string: MDM_COMMAND_UUID), CBUUID(string: MDM_STREAMDATA_UUID),CBUUID(string: MDM_OFFLOAD_UUID),CBUUID(string: MDM_OFFLOADDATA_UUID)]//,CBUUID(string: MDM_FETCHLOSTDATA_UUID)]
+            let theCharacteristics = [CBUUID(string: MDM_COMMAND_UUID),
+                                      CBUUID(string: MDM_STREAMDATA_UUID),
+                                      CBUUID(string: MDM_OFFLOAD_UUID),
+                                      CBUUID(string: MDM_OFFLOADDATA_UUID),
+                                      CBUUID(string: MDM_SCALE_UUID)]//,CBUUID(string: MDM_FETCHLOSTDATA_UUID)]
             
             peripheral.discoverCharacteristics(theCharacteristics, for: service)
         }
@@ -275,6 +309,27 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         for characteristic in service.characteristics! {
             self.characteristics[characteristic.uuid.uuidString] = characteristic
+            //check scale
+            if characteristic.uuid.uuidString == MDM_SCALE_UUID{
+                let charValue = [UInt8](characteristic.value!)
+                print("[DEBUG] accelerometer scale read success, value = \(charValue[3])")
+                switch charValue[3] {
+                case 1:
+                    self.accScale = 0.5
+                    break
+                case 2:
+                    self.accScale = 1.0
+                    break
+                case 3:
+                    self.accScale = 2.0
+                    break
+                case 4:
+                    self.accScale = 4.0
+                    break
+                default:
+                    break
+                }
+            }
         }
         
         enableNotifications(enable: true)
@@ -310,12 +365,44 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
             let strvalue = datavalue?.hexEncodedString()
+            self.streamString += strvalue!
+            //update status bar to see data coming, comment to accelerate offload
             self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
+            let sensorData = [UInt8](datavalue!)
+            let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
+            let Ax_signed:Int16 = Int16(bitPattern: Ax)
+            let fax = Double(Ax_signed) / 8192.0 * self.accScale
+            let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
+            let Ay_signed:Int16 = Int16(bitPattern: Ay)
+            let fay = Double(Ay_signed) / 8192.0 * self.accScale
+            let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
+            let Az_signed:Int16 = Int16(bitPattern: Az)
+            let faz = Double(Az_signed) / 8192.0 * self.accScale
+            print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
+            if (self.BLEViewController?.arrayCounter)! < 40 {
+                self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fax
+                self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fay
+                self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = faz
+                self.BLEViewController?.arrayCounter += 1
+            }
+            else{
+                for i in 0...38{
+                    self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
+                    self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
+                    self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+                }
+                self.BLEViewController?.Ax_plot[39] = fax
+                self.BLEViewController?.Ay_plot[39] = fay
+                self.BLEViewController?.Az_plot[39] = faz
+            }
+            self.BLEViewController?.graph.reloadData()
+            
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
             let strvalue = datavalue?.hexEncodedString()
+            //update status bar to see data coming, comment to accelerate offload
             self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
             
             if(self.isOffloadFinished) {

@@ -36,6 +36,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //connect button click event
     @IBAction func connectBtnClk(_ sender: Any) {
         
+        globalVariables.BLEHandler.stopScanning()
         let success = globalVariables.BLEHandler.connectToPeripheral(peripheral: globalVariables.BLEHandler.peripherals[self.targetDeviceIndex])
         if success {
             globalVariables.appStatus = "connecting to: \(globalVariables.BLEHandler.peripherals[self.targetDeviceIndex].name ?? "N/A")"
