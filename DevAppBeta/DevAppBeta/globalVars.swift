@@ -13,5 +13,6 @@ struct globalVariables {
     static let BLEHandler = BLEController()
     static var allSensorList = [String]()
     static let FileHandler = CustomFileManager()
+    static let MaxNumOfDevice = 4 // maximum device to pair with
     
 }

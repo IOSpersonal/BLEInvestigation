@@ -28,36 +28,39 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     let MDM_SERVICE_UUID            = "00000005-0008-A8BA-E311-F48C90364D99"
     let MDM_COMMAND_UUID            = "00000006-0008-A8BA-E311-F48C90364D99"
-    let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
     let MDM_SCALE_UUID              = "0000000A-0008-A8BA-E311-F48C90364D99"
+    let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
     let MDM_OFFLOAD_UUID            = "00000011-0008-A8BA-E311-F48C90364D99"
     let MDM_OFFLOADDATA_UUID        = "00000012-0008-A8BA-E311-F48C90364D99"
-    
-    //let MDM_FETCHLOSTDATA_UUID = "00000013-0008-A8BA-E311-F48C90364D99" //DEPRECIATED
-    
+
     var delegate: BLEDelegate?
     var mainViewController: ViewController?
     var BLEViewController: BLEViewController?
     
-    //for checking packet loss
-    var lastSeqNum: UInt16 = 0
-    var lostSeqNums = [UInt16]()
-    
-    private      var centralManager:   CBCentralManager!
-    private      var activePeripheral: CBPeripheral?
-    private      var characteristics = [String : CBCharacteristic]()
-    private      var data:             NSMutableData?
-    private(set) var peripherals     = [CBPeripheral]()
+    private      var centralManager:        CBCentralManager!
+    private      var activePeripherals      = [CBPeripheral]()
+    private      var characteristics        = [[String : CBCharacteristic]]()
+    private      var data:                  NSMutableData?
+    private(set) var peripherals            = [CBPeripheral]()
     private      var RSSICompletionHandler: ((NSNumber?, NSError?) -> ())?
     //string for saving all offloaded data
-    private      var offloadString = ""
-    private      var streamString = ""
+    private      var offloadStrings         = [String]()
+    //string for saving all streamed data
+    private      var streamStrings          = [String]()
     //for fetching specific lost packet
-    private      var fetchIndex = 0
+    private      var fetchIndices           = [Int]()
     //bool flag for checking offload finished for fetching lost data
-    private      var isOffloadFinished = false
+    private      var isOffloadFinished      = [Bool]()
     //accelerometer scale
-    private      var accScale = 1.0
+    private      var accScales              = [Double]()
+    private      var peripheralCount        = 0
+    //for checking packet loss
+    private      var lastSeqNums            = [UInt16]()
+    private      var lostSeqNums            = [[UInt16]]()
+    //file names for streaming and offloading
+    private      var offloadFileNames       = [String]()
+    private      var streamFileNames        = [String]()
+    
     
     override init() {
         super.init()
@@ -146,52 +149,61 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             print("[ERROR] Couldn´t disconnect from peripheral")
             return false
         }
-        
-        self.centralManager.cancelPeripheralConnection(self.activePeripheral!)
-        
+        for i in 0...self.activePeripherals.count-1{
+            self.centralManager.cancelPeripheralConnection(self.activePeripherals[i])
+        }
         return true
     }
 
-    func enableNotifications(enable: Bool) {
-        print("[DEBUG] enable notification for sensor")
-        guard let char_stream = self.characteristics[MDM_STREAMDATA_UUID] else { return }
-        self.activePeripheral?.setNotifyValue(enable, for: char_stream)
-        guard let char_offload = self.characteristics[MDM_OFFLOADDATA_UUID] else { return }
-        self.activePeripheral?.setNotifyValue(enable, for: char_offload)
-        //guard let char_fetch = self.characteristics[MDM_FETCHLOSTDATA_UUID] else { return }
-        //self.activePeripheral?.setNotifyValue(enable, for: char_fetch)
+    func enableNotificationsFor(Peripheral: CBPeripheral, enable: Bool) {
+        print("[DEBUG] enable notification for sensor: \(Peripheral.name ?? "nil")")
+        let targetDevice = (self.activePeripherals as AnyObject).index(of: Peripheral)
+        guard let char_stream = self.characteristics[targetDevice][MDM_STREAMDATA_UUID] else { return }
+        Peripheral.setNotifyValue(enable, for: char_stream)
+        guard let char_offload = self.characteristics[targetDevice][MDM_OFFLOADDATA_UUID] else { return }
+        Peripheral.setNotifyValue(enable, for: char_offload)
     }
  
     func readRSSI(completion: @escaping (_ RSSI: NSNumber?, _ error: NSError?) -> ()) {
-        
         self.RSSICompletionHandler = completion
-        self.activePeripheral?.readRSSI()
+        for i in 0...self.activePeripherals.count-1{
+            self.activePeripherals[i].readRSSI()
+        }
     }
     
     func startStreaming(){
         let data = Data(bytes: [0x01])
-        guard let char = self.characteristics[MDM_COMMAND_UUID] else {return}
-        self.activePeripheral?.writeValue(data, for: char, type: .withResponse)
-        let filename = (self.activePeripheral?.name!)! + "_stream.txt"
-        globalVariables.FileHandler.setFileName(filename: filename)
+        for i in 0...self.activePeripherals.count-1{
+            guard let char = self.characteristics[i][MDM_COMMAND_UUID] else {return}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+            let filename = (self.activePeripherals[i].name)! + "_stream.txt"
+            self.streamFileNames.append(filename)
+        }
     }
     
     func stopStreaming(){
         let data = Data(bytes: [0x02])
-        guard let char = self.characteristics[MDM_COMMAND_UUID] else {return}
-        self.activePeripheral?.writeValue(data, for: char, type: .withResponse)
-        globalVariables.appStatus = "streamComplete"
-        self.BLEViewController?.updateStatus(value: "streamComplete, writing to file")
-        globalVariables.FileHandler.writeFile(filename: globalVariables.FileHandler.filename!, text: self.streamString)
+        for i in 0...self.activePeripherals.count-1{
+            guard let char = self.characteristics[i][MDM_COMMAND_UUID] else {return}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+            globalVariables.appStatus = "streamComplete"
+            self.BLEViewController?.updateStatus(value: "streamComplete, writing to file")
+            globalVariables.FileHandler.writeFile(filename: self.streamFileNames[i], text: self.streamStrings[i])
+        }
+        
     }
     
     func offloadCompressedData(){
-        self.isOffloadFinished = false
-        let filename = (self.activePeripheral?.name!)! + "_offload.txt"
-        globalVariables.FileHandler.setFileName(filename: filename)
-        let data = Data(bytes: [0x06])
-        guard let char = self.characteristics[MDM_OFFLOAD_UUID] else {return}
-        self.activePeripheral?.writeValue(data, for: char, type: .withResponse)
+        for i in 0...self.activePeripherals.count-1{
+            self.isOffloadFinished.append(false)
+            self.lostSeqNums.append([])
+            self.fetchIndices.append(0)
+            let filename = (self.activePeripherals[i].name)! + "_offload.txt"
+            self.offloadFileNames.append(filename)
+            let data = Data(bytes: [0x06])
+            guard let char = self.characteristics[i][MDM_OFFLOAD_UUID] else {return}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+        }
     }
     
     // MARK: CBCentralManager delegate
@@ -246,17 +258,18 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("[DEBUG] Connected to peripheral \(peripheral.name ?? "nil")")
-        
-        globalVariables.appStatus = "connected to \(peripheral.name ?? "nil")"
-        self.BLEViewController?.updateStatus(value: globalVariables.appStatus)
-        self.activePeripheral = peripheral
-        
-        self.activePeripheral?.delegate = self
-        self.activePeripheral?.discoverServices([CBUUID(string: MDM_SERVICE_UUID)])
-        
+        //initialise variables for new peripheral
+        self.activePeripherals.append(peripheral)
+        self.activePeripherals[self.peripheralCount].delegate = self
+        self.activePeripherals[self.peripheralCount].discoverServices([CBUUID(string: MDM_SERVICE_UUID)])
+        self.accScales.append(1.0)
+        self.offloadStrings.append("")
+        self.streamStrings.append("")
+        self.lastSeqNums.append(0)
+        self.characteristics.append([:])
+        self.peripheralCount += 1
         self.delegate?.bleDidConnectToPeripheral()
     }
-
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         var text = "[DEBUG] Disconnected from peripheral: \(peripheral.name ?? "nil")"
@@ -264,13 +277,25 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         if error != nil {
             text += ". Error: \(error.debugDescription)"
         }
-        
         print(text)
-        
-        self.activePeripheral?.delegate = nil
-        self.activePeripheral = nil
-        self.characteristics.removeAll(keepingCapacity: false)
-        
+        //remove all references
+        let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
+        self.activePeripherals[targetDevice].delegate = nil
+        self.activePeripherals.remove(at: targetDevice)
+        self.accScales.remove(at: targetDevice)
+        self.streamStrings.remove(at: targetDevice)
+        self.offloadStrings.remove(at: targetDevice)
+        self.lastSeqNums.remove(at: targetDevice)
+        if self.offloadFileNames.count > 0{
+            self.offloadFileNames.remove(at: targetDevice)
+            self.lostSeqNums.remove(at: targetDevice)
+            self.isOffloadFinished.remove(at: targetDevice)
+        }
+        if self.streamFileNames.count > 0{
+            self.streamFileNames.remove(at: targetDevice)
+        }
+        self.peripheralCount -= 1
+        self.characteristics.remove(at: targetDevice)
         self.delegate?.bleDidDisconenctFromPeripheral()
     }
 
@@ -290,8 +315,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                                       CBUUID(string: MDM_STREAMDATA_UUID),
                                       CBUUID(string: MDM_OFFLOAD_UUID),
                                       CBUUID(string: MDM_OFFLOADDATA_UUID),
-                                      CBUUID(string: MDM_SCALE_UUID)]//,CBUUID(string: MDM_FETCHLOSTDATA_UUID)]
-            
+                                      CBUUID(string: MDM_SCALE_UUID)]
             peripheral.discoverCharacteristics(theCharacteristics, for: service)
         }
  
@@ -306,48 +330,46 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         
         print("[DEBUG] Found characteristics for peripheral: \(peripheral.name ?? "nil")")
-        
+        let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
         for characteristic in service.characteristics! {
-            self.characteristics[characteristic.uuid.uuidString] = characteristic
+            self.characteristics[targetDevice][characteristic.uuid.uuidString] = characteristic
             //check scale
             if characteristic.uuid.uuidString == MDM_SCALE_UUID{
-                let charValue = [UInt8](characteristic.value!)
-                print("[DEBUG] accelerometer scale read success, value = \(charValue[3])")
-                switch charValue[3] {
-                case 1:
-                    self.accScale = 0.5
-                    break
-                case 2:
-                    self.accScale = 1.0
-                    break
-                case 3:
-                    self.accScale = 2.0
-                    break
-                case 4:
-                    self.accScale = 4.0
-                    break
-                default:
-                    break
+                if characteristic.value != nil{
+                    
+                    let charValue = [UInt8](characteristic.value!)
+                    print("[DEBUG] accelerometer scale read success, value = \(charValue[3])")
+                    switch charValue[3] {
+                    case 1:
+                        self.accScales[targetDevice] = 0.5
+                        break
+                    case 2:
+                        self.accScales[targetDevice] = 1.0
+                        break
+                    case 3:
+                        self.accScales[targetDevice] = 2.0
+                        break
+                    case 4:
+                        self.accScales[targetDevice] = 4.0
+                        break
+                    default:
+                        break
+                    }
                 }
             }
         }
-        
-        enableNotifications(enable: true)
+        enableNotificationsFor(Peripheral: peripheral, enable: true)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        /*
-        if characteristic.uuid.uuidString == MDM_FETCHLOSTDATA_UUID {
-            print("[DEBUG] write response for fetching lost data")
-            //[DEPRECIATED] no need for reading, this migrated to MDM_OFFLOADDATA_UUID
-            //self.activePeripheral?.readValue(for: characteristic)
-        }*/
+
         if characteristic.uuid.uuidString == MDM_COMMAND_UUID {
             print("[DEBUG] write response for ble command")
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
+            let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
             print("[DEBUG] write response for fetching lost data")
-            self.activePeripheral?.readValue(for: characteristic)
+            self.activePeripherals[targetDevice].readValue(for: characteristic)
         }
         
     }
@@ -360,155 +382,123 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             print("[ERROR] Error updating value. \(error.debugDescription)")
             return
         }
-        
+        let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
         if characteristic.uuid.uuidString == MDM_STREAMDATA_UUID {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
             let strvalue = datavalue?.hexEncodedString()
-            self.streamString += strvalue!
+            self.streamStrings[targetDevice] += strvalue!
             //update status bar to see data coming, comment to accelerate offload
             self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
             let sensorData = [UInt8](datavalue!)
             let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
             let Ax_signed:Int16 = Int16(bitPattern: Ax)
-            let fax = Double(Ax_signed) / 8192.0 * self.accScale
+            let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
             let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
             let Ay_signed:Int16 = Int16(bitPattern: Ay)
-            let fay = Double(Ay_signed) / 8192.0 * self.accScale
+            let fay = Double(Ay_signed) / 8192.0 * self.accScales[targetDevice]
             let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
             let Az_signed:Int16 = Int16(bitPattern: Az)
-            let faz = Double(Az_signed) / 8192.0 * self.accScale
+            let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
             print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
-            if (self.BLEViewController?.arrayCounter)! < 40 {
-                self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fax
-                self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fay
-                self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = faz
-                self.BLEViewController?.arrayCounter += 1
-            }
-            else{
-                for i in 0...38{
-                    self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
-                    self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
-                    self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+            //show plot only for first device
+            if targetDevice == 0{
+                if (self.BLEViewController?.arrayCounter)! < 40 {
+                    self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fax
+                    self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fay
+                    self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = faz
+                    self.BLEViewController?.arrayCounter += 1
                 }
-                self.BLEViewController?.Ax_plot[39] = fax
-                self.BLEViewController?.Ay_plot[39] = fay
-                self.BLEViewController?.Az_plot[39] = faz
+                else{
+                    for i in 0...38{
+                        self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
+                        self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
+                        self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+                    }
+                    self.BLEViewController?.Ax_plot[39] = fax
+                    self.BLEViewController?.Ay_plot[39] = fay
+                    self.BLEViewController?.Az_plot[39] = faz
+                }
+                self.BLEViewController?.graph.reloadData()
             }
-            self.BLEViewController?.graph.reloadData()
-            
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
             let strvalue = datavalue?.hexEncodedString()
             //update status bar to see data coming, comment to accelerate offload
-            self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
-            
-            if(self.isOffloadFinished) {
+            self.BLEViewController?.updateStreamDataLbl(value: strvalue! + ", from device: " + peripheral.name!)
+            if(self.isOffloadFinished[targetDevice]) {
                 //lost data fetched response
                 print("[DEBUG] lost data resent")
                 let datavalue = characteristic.value
                 let strvalue = datavalue?.hexEncodedString()
                 self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
-                self.offloadString += strvalue!
-                if self.fetchIndex <= self.lostSeqNums.count - 1 {
+                self.offloadStrings[targetDevice] += strvalue!
+                if self.fetchIndices[targetDevice] <= self.lostSeqNums[targetDevice].count - 1 {
                     // not finished fetching
-                    let i = self.lostSeqNums[self.fetchIndex]
-                    self.fetchIndex += 1
+                    let i = self.lostSeqNums[targetDevice][self.fetchIndices[targetDevice]]
+                    self.fetchIndices[targetDevice] += 1
                     var cmd_array = [UInt8]()
                     cmd_array.append(3)
                     cmd_array.append(UInt8(i / 256))
                     cmd_array.append(UInt8(i % 256))
                     let cmd = Data(bytes: cmd_array)
-                    guard let char = self.characteristics[MDM_OFFLOADDATA_UUID] else {return}
-                    self.activePeripheral?.writeValue(cmd, for: char, type: .withResponse)
+                    guard let char = self.characteristics[targetDevice][MDM_OFFLOADDATA_UUID] else {return}
+                    self.activePeripherals[targetDevice].writeValue(cmd, for: char, type: .withResponse)
                 }
                 else {
                     //finished fetching, write to file
                     print("[DEBUG] data offload complete, lost packets: \(self.lostSeqNums.count), resend successful")
                     globalVariables.appStatus = "offloadComplete"
                     self.BLEViewController?.updateStatus(value: "offloadComplete, lost packets successfully collected")
-                    globalVariables.FileHandler.writeFile(filename: globalVariables.FileHandler.filename!, text: self.offloadString)
+                    globalVariables.FileHandler.writeFile(filename: self.offloadFileNames[targetDevice], text: self.offloadStrings[targetDevice])
                 }
             }
             else if (strvalue?.hasPrefix("03ffff"))!{
                 //end of offloading, get lost packets
-                self.isOffloadFinished = true
+                self.isOffloadFinished[targetDevice] = true
                 if !self.lostSeqNums.isEmpty {
                     print("[DEBUG] end of offloading, lost packet fetching, total: \(self.lostSeqNums.count)")
-                    let i = self.lostSeqNums[self.fetchIndex]
-                    self.fetchIndex += 1
+                    let i = self.lostSeqNums[targetDevice][self.fetchIndices[targetDevice]]
+                    self.fetchIndices[targetDevice] += 1
                     var cmd_array = [UInt8]()
                     cmd_array.append(3)
                     cmd_array.append(UInt8(i / 256))
                     cmd_array.append(UInt8(i % 256))
                     let cmd = Data(bytes: cmd_array)
-                    guard let char = self.characteristics[MDM_OFFLOADDATA_UUID] else {return}
-                    self.activePeripheral?.writeValue(cmd, for: char, type: .withResponse)
+                    guard let char = self.characteristics[targetDevice][MDM_OFFLOADDATA_UUID] else {return}
+                    self.activePeripherals[targetDevice].writeValue(cmd, for: char, type: .withResponse)
                 }
                 else {
                     print("[DEBUG] offload completed with no lost packet")
                     //write to storage
                     globalVariables.appStatus = "offloadComplete"
                     self.BLEViewController?.updateStatus(value: "offloadComplete, no lost packets")
-                    globalVariables.FileHandler.writeFile(filename: globalVariables.FileHandler.filename!, text: self.offloadString)
+                    globalVariables.FileHandler.writeFile(filename: self.offloadFileNames[targetDevice], text: self.offloadStrings[targetDevice])
                 }
                 
             }
             else{
                 //check if lost packet
                 let currentSeqNum: UInt16 = UInt16((datavalue?[1])!) * 256 + UInt16((datavalue?[2])!)
-                if ((currentSeqNum == 0) || ((currentSeqNum - self.lastSeqNum) == 1)){
+                if ((currentSeqNum == 0) || ((currentSeqNum - self.lastSeqNums[targetDevice]) == 1)){
                     //this is okay
-                    self.lastSeqNum = currentSeqNum
+                    self.lastSeqNums[targetDevice] = currentSeqNum
                 }
                 else{
-                    var gap = UInt16(currentSeqNum) - UInt16(self.lastSeqNum)
+                    var gap = UInt16(currentSeqNum) - UInt16(self.lastSeqNums[targetDevice])
                     gap -= 1
                     print("[DEBUG] lost packet detected: at index \(currentSeqNum), num: \(gap)")
                     for i in 1...gap {
-                        self.lostSeqNums.append(currentSeqNum - i)
+                        self.lostSeqNums[targetDevice].append(currentSeqNum - i)
                     }
-                    self.lastSeqNum = currentSeqNum
+                    self.lastSeqNums[targetDevice] = currentSeqNum
                 }
                 //append offload string
-                self.offloadString += strvalue!
+                self.offloadStrings[targetDevice] += strvalue!
             }
         }
-        //else if characteristic.uuid.uuidString == MDM_FETCHLOSTDATA_UUID {
-            // migrated to MDM_OFFLOADDATA_UUID
-            
-            /*
-            //lost data fetched response
-            print("[DEBUG] lost data resent")
-            let datavalue = characteristic.value
-            let strvalue = datavalue?.hexEncodedString()
-            self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
-            self.offloadString += strvalue!
-            if self.fetchIndex <= self.lostSeqNums.count - 1 {
-                // not finished fetching
-                let i = self.lostSeqNums[self.fetchIndex]
-                self.fetchIndex += 1
-                print("[TEMPDEBUG] fetching ind: \(i)")
-                var cmd_array = [UInt8]()
-                cmd_array.append(3)
-                cmd_array.append(UInt8(i / 256))
-                cmd_array.append(UInt8(i % 256))
-                let cmd = Data(bytes: cmd_array)
-                print("[TEMPDEBUG] sending cmd: \(cmd_array)")
-                guard let char = self.characteristics[MDM_FETCHLOSTDATA_UUID] else {return}
-                self.activePeripheral?.writeValue(cmd, for: char, type: .withResponse)
-            }
-            else {
-                //finished fetching, write to file
-                print("[DEBUG] data offload complete, lost packets: \(self.lostSeqNums.count), resend successful")
-                globalVariables.appStatus = "offloadComplete"
-                self.BLEViewController?.updateStatus(value: "offloadComplete, no lost packets")
-                globalVariables.FileHandler.writeFile(filename: globalVariables.FileHandler.filename!, text: self.offloadString)
-            }*/
-        //}
- 
     }
     
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {

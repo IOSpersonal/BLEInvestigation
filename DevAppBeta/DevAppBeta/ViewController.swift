@@ -10,8 +10,9 @@ import UIKit
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     @IBOutlet var statusLabel: UILabel!
+    @IBOutlet var connectBtn: UIButton!
     @IBOutlet var DeviceListTableView: UITableView!
-    var targetDeviceIndex: Int = 0
+    var targetDeviceIndices: [Int] = [Int]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,6 +20,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         globalVariables.BLEHandler.passMainView(view: self)
         globalVariables.appStatus = "initialised"
         self.updateStatus(value: globalVariables.appStatus)
+        self.connectBtn.isEnabled = false
         // Do any additional setup after loading the view, typically from a nib.
     }
 
@@ -35,15 +37,19 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //connect button click event
     @IBAction func connectBtnClk(_ sender: Any) {
-        
-        globalVariables.BLEHandler.stopScanning()
-        let success = globalVariables.BLEHandler.connectToPeripheral(peripheral: globalVariables.BLEHandler.peripherals[self.targetDeviceIndex])
-        if success {
-            globalVariables.appStatus = "connecting to: \(globalVariables.BLEHandler.peripherals[self.targetDeviceIndex].name ?? "N/A")"
-            
-        }
-        else {
-            globalVariables.appStatus = "connection unsuccessful"
+        if self.targetDeviceIndices.count > 0 {
+            globalVariables.BLEHandler.stopScanning()
+            var success = true
+            for i in 0...self.targetDeviceIndices.count-1{
+                success = success && globalVariables.BLEHandler.connectToPeripheral(peripheral: globalVariables.BLEHandler.peripherals[self.targetDeviceIndices[i]])
+            }
+            if success {
+                globalVariables.appStatus = "connection successful"
+                
+            }
+            else {
+                globalVariables.appStatus = "connection unsuccessful"
+            }
         }
     }
 
@@ -70,8 +76,32 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.targetDeviceIndex = indexPath.row
-        self.updateStatus(value: "selected: \(globalVariables.allSensorList[self.targetDeviceIndex])")
+        if self.targetDeviceIndices.contains(indexPath.row){
+            print("[DEBUG] remove from selected: \(self.targetDeviceIndices[(self.targetDeviceIndices as AnyObject).index(of: indexPath.row)])")
+            self.targetDeviceIndices.remove(at: (self.targetDeviceIndices as AnyObject).index(of: indexPath.row))
+            
+        }
+        else if(self.targetDeviceIndices.count < globalVariables.MaxNumOfDevice){
+            print("[DEBUG] add to selected: \(globalVariables.allSensorList[indexPath.row])")
+            self.targetDeviceIndices.append(indexPath.row)
+            
+        }
+        if self.targetDeviceIndices.count > 0 {
+            var statusString = "selected: "
+            for i in 0...self.targetDeviceIndices.count-1{
+                statusString += globalVariables.allSensorList[self.targetDeviceIndices[i]]
+                statusString += " "
+                if i == 1 {
+                    statusString += "\n                "
+                }
+            }
+            self.updateStatus(value: statusString)
+            self.connectBtn.isEnabled = true
+        }
+        else {
+            self.connectBtn.isEnabled = false
+            self.updateStatus(value: "selected: ")
+        }
     }
 }
 

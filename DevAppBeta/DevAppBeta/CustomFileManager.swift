@@ -9,15 +9,9 @@
 import UIKit
 
 class CustomFileManager: NSObject {
-    var filename: String?
-    
+
     override init(){
         super.init()
-    }
-    
-    func setFileName(filename: String) {
-        print("[DEBUG] filename is set to \(filename)")
-        self.filename = filename
     }
     
     func writeFile(filename: String, text: String) {

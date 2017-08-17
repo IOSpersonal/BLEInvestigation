@@ -114,8 +114,8 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         self.graph.attributedTitle = graphTitle
         
         //add legend
-        var accLegend = CPTLegend(graph: self.graph)
-        var legendLineStyle = CPTMutableLineStyle()
+        let accLegend = CPTLegend(graph: self.graph)
+        let legendLineStyle = CPTMutableLineStyle()
         legendLineStyle.lineColor = CPTColor.white()
         accLegend.numberOfRows = 3
         accLegend.numberOfColumns = 1
