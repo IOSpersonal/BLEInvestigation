@@ -187,6 +187,40 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         self.streamBtn.isEnabled = true
         self.updateStatus(value: "Connected")
     }
+    
+    func configurationTextField(textField: UITextField!)
+    {
+        textField.keyboardType = UIKeyboardType.numberPad
+    }
+    
+    @IBAction func monitorBtnClk(_ sender: Any) {
+        print("[DEBUG] monitor button clicked")
+        let alert = UIAlertController(title: "Start Monitoring", message: "Input a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)", preferredStyle: UIAlertControllerStyle.alert)
+        let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
+        alert.addTextField(configurationHandler: configurationTextField)
+        alert.addAction(voidAction)
+        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler:{ (UIAlertAction)in
+            let monitorTimeDec = Int((alert.textFields?[0].text)!)!
+            if monitorTimeDec > 4320 {
+                let notValidTimeAlert = UIAlertController(title: "ERROR", message: "The time you entered is not Valid", preferredStyle: UIAlertControllerStyle.alert)
+                notValidTimeAlert.addAction(voidAction)
+                self.present(notValidTimeAlert, animated: false, completion: nil)
+            }
+            else{
+                print("[DEBUG] user input monitor time: \(monitorTimeDec) minutes")
+                let success = globalVariables.BLEHandler.startMonitoring(time: monitorTimeDec)
+                var message = "start monitoring failed"
+                if success{
+                    message = "start monitoring successful"
+                }
+                let monitorSuccessAlert = UIAlertController(title: "start monitoring", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                monitorSuccessAlert.addAction(voidAction)
+                self.present(monitorSuccessAlert, animated: false, completion: nil)
+            }
+        }))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     @IBAction func compressedDataOffloadBtnClk(_ sender: Any) {
         globalVariables.BLEHandler.offloadCompressedData()
         self.updateStatus(value: "offloading")

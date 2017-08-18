@@ -29,6 +29,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     let MDM_SERVICE_UUID            = "00000005-0008-A8BA-E311-F48C90364D99"
     let MDM_COMMAND_UUID            = "00000006-0008-A8BA-E311-F48C90364D99"
     let MDM_SCALE_UUID              = "0000000A-0008-A8BA-E311-F48C90364D99"
+    let MDM_SESSIONID_UUID          = "0000000C-0008-A8BA-E311-F48C90364D99"
     let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
     let MDM_OFFLOAD_UUID            = "00000011-0008-A8BA-E311-F48C90364D99"
     let MDM_OFFLOADDATA_UUID        = "00000012-0008-A8BA-E311-F48C90364D99"
@@ -146,7 +147,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func disconnectAllPeripheral() -> Bool {
         print("[DEBUG] disconnect from all peripheral")
-        if self.centralManager.state != .poweredOn {
+        if (self.centralManager.state != .poweredOn) || (self.activePeripherals.count == 0) {
             
             print("[ERROR] Couldn´t disconnect from peripheral")
             return false
@@ -193,6 +194,38 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             globalVariables.FileHandler.writeFile(filename: self.streamFileNames[i], text: self.streamStrings[i])
         }
         
+    }
+    
+    func generateSessionID(intValue: Int) -> Data {
+        var profileID:UInt8 = UInt8(0x02)
+        if intValue>3000{
+            //change to 20/20/0 Hz if > 50 hours
+            print("[DEBUG] long monitor: change profile")
+            profileID = UInt8(0x05)
+        }
+        var sessionTimeBytes = [UInt8]()
+        sessionTimeBytes.append(UInt8(UInt16(intValue) >> 8))
+        sessionTimeBytes.append(UInt8(UInt16(intValue) & 0x00ff))
+        sessionTimeBytes.append(profileID)
+        sessionTimeBytes.append(UInt8(0x00))
+        let dataValue = Data.init(bytes: sessionTimeBytes)
+        print("[DEBUG] session id is calculated as: \(dataValue)")
+        return dataValue
+    }
+    
+    func startMonitoring(time: Int) -> Bool {
+        //go to monitoring, generate session id
+        let sessionID:Data = self.generateSessionID(intValue: time)
+        //start monitoring will disconnect from peripheral, store num of peripheral in advance
+        let n = self.activePeripherals.count-1
+        for i in 0...n{
+            guard let char = self.characteristics[i][MDM_SESSIONID_UUID] else {return false}
+            self.activePeripherals[i].writeValue(sessionID, for: char, type: .withResponse)
+            let data = Data(bytes: [0x03])
+            guard let charCommand = self.characteristics[i][MDM_COMMAND_UUID] else {return false}
+            self.activePeripherals[i].writeValue(data, for: charCommand, type: .withResponse)
+        }
+        return true
     }
     
     func offloadCompressedData(){
@@ -323,6 +356,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                                       CBUUID(string: MDM_STREAMDATA_UUID),
                                       CBUUID(string: MDM_OFFLOAD_UUID),
                                       CBUUID(string: MDM_OFFLOADDATA_UUID),
+                                      CBUUID(string: MDM_SESSIONID_UUID),
                                       CBUUID(string: MDM_SCALE_UUID)]
             peripheral.discoverCharacteristics(theCharacteristics, for: service)
         }

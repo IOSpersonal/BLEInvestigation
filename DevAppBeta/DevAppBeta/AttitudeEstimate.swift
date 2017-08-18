@@ -20,7 +20,7 @@ class AttitudeEstimate: NSObject {
     var magz: [Double] = []
     var time: [Double] = []
     var dataLength: Int32 = 0
-    
+    //To be implemented
     
 
 }
