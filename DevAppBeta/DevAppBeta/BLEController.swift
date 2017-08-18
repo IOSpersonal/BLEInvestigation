@@ -51,6 +51,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var fetchIndices           = [Int]()
     //bool flag for checking offload finished for fetching lost data
     private      var isOffloadFinished      = [Bool]()
+    //bool flag for checking offload all finished including getting lost data
+    private      var isOffloadCompleted      = [Bool]()
     //accelerometer scale
     private      var accScales              = [Double]()
     private      var peripheralCount        = 0
@@ -194,8 +196,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
     
     func offloadCompressedData(){
+        self.isOffloadFinished.removeAll(keepingCapacity: false)
+        self.isOffloadCompleted.removeAll(keepingCapacity: false)
+        self.lostSeqNums.removeAll(keepingCapacity: false)
+        self.fetchIndices.removeAll(keepingCapacity: false)
+        self.offloadFileNames.removeAll(keepingCapacity: false)
         for i in 0...self.activePeripherals.count-1{
             self.isOffloadFinished.append(false)
+            self.isOffloadCompleted.append(false)
             self.lostSeqNums.append([])
             self.fetchIndices.append(0)
             let filename = (self.activePeripherals[i].name)! + "_offload.txt"
@@ -453,13 +461,19 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     globalVariables.appStatus = "offloadComplete"
                     self.BLEViewController?.updateStatus(value: "offloadComplete, lost packets successfully collected")
                     globalVariables.FileHandler.writeFile(filename: self.offloadFileNames[targetDevice], text: self.offloadStrings[targetDevice])
+                    self.isOffloadCompleted[targetDevice] = true
+                    if !self.isOffloadCompleted.contains(false){
+                        self.BLEViewController?.dismissOffloadSpinner()
+                    }
                 }
             }
             else if (strvalue?.hasPrefix("03ffff"))!{
                 //end of offloading, get lost packets
                 self.isOffloadFinished[targetDevice] = true
-                if !self.lostSeqNums.isEmpty {
+                if !self.lostSeqNums[targetDevice].isEmpty {
                     print("[DEBUG] end of offloading, lost packet fetching, total: \(self.lostSeqNums.count)")
+                    print("[TEMP] \(targetDevice), \(self.lostSeqNums.count), \(self.fetchIndices.count)")
+                    print("[TEMP] \(self.lostSeqNums[targetDevice].count), \(self.fetchIndices[targetDevice])")
                     let i = self.lostSeqNums[targetDevice][self.fetchIndices[targetDevice]]
                     self.fetchIndices[targetDevice] += 1
                     var cmd_array = [UInt8]()
@@ -476,6 +490,10 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     globalVariables.appStatus = "offloadComplete"
                     self.BLEViewController?.updateStatus(value: "offloadComplete, no lost packets")
                     globalVariables.FileHandler.writeFile(filename: self.offloadFileNames[targetDevice], text: self.offloadStrings[targetDevice])
+                    self.isOffloadCompleted[targetDevice] = true
+                    if !self.isOffloadCompleted.contains(false){
+                        self.BLEViewController?.dismissOffloadSpinner()
+                    }
                 }
                 
             }

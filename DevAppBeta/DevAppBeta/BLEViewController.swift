@@ -21,6 +21,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     var Ay_plot = Array(repeating: 0.0, count: 40)
     var Az_plot = Array(repeating: 0.0, count: 40)
     var arrayCounter = 0;
+    private var offloadAlert = UIAlertController()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,14 +29,21 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         self.updateStatus(value: globalVariables.appStatus)
         self.stopStreamBtn.isEnabled = false
         // Do any additional setup after loading the view.
+        //init alertview
+        self.offloadAlert = UIAlertController(title: nil, message: "Offloading, Please wait...\n\n\n", preferredStyle: UIAlertControllerStyle.alert)
+        let spinner = UIActivityIndicatorView.init(activityIndicatorStyle: UIActivityIndicatorViewStyle.whiteLarge)
+        spinner.center = CGPoint(x: 130.5, y: 65.5)
+        spinner.color = UIColor.black
+        spinner.startAnimating()
+        offloadAlert.view.addSubview(spinner)
         
         //init graph view
         self.graph.paddingLeft = 10.0
         self.graph.paddingTop = 10.0
         self.graph.paddingRight = 10.0
         self.graph.paddingBottom = 10.0
-        var axes = graph.axisSet as! CPTXYAxisSet
-        var lineStyle = CPTMutableLineStyle()
+        let axes = graph.axisSet as! CPTXYAxisSet
+        let lineStyle = CPTMutableLineStyle()
         lineStyle.lineWidth = 2
         axes.xAxis?.axisLineStyle = lineStyle
         axes.yAxis?.axisLineStyle = lineStyle
@@ -182,7 +190,15 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     @IBAction func compressedDataOffloadBtnClk(_ sender: Any) {
         globalVariables.BLEHandler.offloadCompressedData()
         self.updateStatus(value: "offloading")
+        self.present(offloadAlert, animated: false, completion: nil)
     }
+    
+    func dismissOffloadSpinner() {
+        //function for dismiss alert view and spinner for offload
+        print("[DEBUG] offload complete, dismiss alert")
+        self.offloadAlert.dismiss(animated: false, completion: nil)
+    }
+    
     @IBAction func flushBtnClk(_ sender: Any) {
         let alert = UIAlertController(title: "confirm flush", message: "are you sure to delete all files from document folder?", preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "confirm", style: UIAlertActionStyle.default, handler: { action in
