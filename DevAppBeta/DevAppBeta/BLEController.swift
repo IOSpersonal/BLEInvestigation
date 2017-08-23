@@ -203,6 +203,10 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             print("[DEBUG] long monitor: change profile")
             profileID = UInt8(0x05)
         }
+        else if !globalVariables.monitorTypeFlag{
+            print("[DEBUG] enter running session")
+            profileID = UInt8(0x02)
+        }
         var sessionTimeBytes = [UInt8]()
         sessionTimeBytes.append(UInt8(UInt16(intValue) >> 8))
         sessionTimeBytes.append(UInt8(UInt16(intValue) & 0x00ff))
@@ -218,10 +222,15 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         let sessionID:Data = self.generateSessionID(intValue: time)
         //start monitoring will disconnect from peripheral, store num of peripheral in advance
         let n = self.activePeripherals.count-1
+        //check flag for running or normal monitoring
+        var data = Data(bytes: [0x03])
+        if !globalVariables.monitorTypeFlag {
+            data = Data(bytes: [0x04])
+        }
         for i in 0...n{
             guard let char = self.characteristics[i][MDM_SESSIONID_UUID] else {return false}
             self.activePeripherals[i].writeValue(sessionID, for: char, type: .withResponse)
-            let data = Data(bytes: [0x03])
+
             guard let charCommand = self.characteristics[i][MDM_COMMAND_UUID] else {return false}
             self.activePeripherals[i].writeValue(data, for: charCommand, type: .withResponse)
         }

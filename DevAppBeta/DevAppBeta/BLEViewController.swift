@@ -22,6 +22,8 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     var Az_plot = Array(repeating: 0.0, count: 40)
     var arrayCounter = 0;
     private var offloadAlert = UIAlertController()
+    private let monitorAlert = UIAlertController(title: "Start Monitoring", message: "\nInput a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)", preferredStyle: UIAlertControllerStyle.alert)
+    private let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -132,6 +134,30 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         accLegend.swatchSize = CGSize(width: 15.0, height: 15.0)
         self.graph.legend = accLegend
         self.graph.legendAnchor = CPTRectAnchor.bottomRight
+        
+        //init monitoring alert
+        self.monitorAlert.addTextField(configurationHandler: configurationTextField)
+        self.monitorAlert.view.addSubview(createSwitch())
+        self.monitorAlert.addAction(voidAction)
+        self.monitorAlert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler:{ (UIAlertAction)in
+            let monitorTimeDec = Int((self.monitorAlert.textFields?[0].text)!)!
+            if (monitorTimeDec > 4320) || (monitorTimeDec > 120 && !globalVariables.monitorTypeFlag) {
+                let notValidTimeAlert = UIAlertController(title: "ERROR", message: "The time you entered is not Valid", preferredStyle: UIAlertControllerStyle.alert)
+                notValidTimeAlert.addAction(self.voidAction)
+                self.present(notValidTimeAlert, animated: false, completion: nil)
+            }
+            else{
+                print("[DEBUG] user input monitor time: \(monitorTimeDec) minutes")
+                let success = globalVariables.BLEHandler.startMonitoring(time: monitorTimeDec)
+                var message = "start monitoring failed"
+                if success{
+                    message = "start monitoring successful"
+                }
+                let monitorSuccessAlert = UIAlertController(title: "start monitoring", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                monitorSuccessAlert.addAction(self.voidAction)
+                self.present(monitorSuccessAlert, animated: false, completion: nil)
+            }
+        }))
     }
     
     func numberOfRecords(for plot: CPTPlot) -> UInt {
@@ -193,32 +219,35 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         textField.keyboardType = UIKeyboardType.numberPad
     }
     
+    func createSwitch () -> UISwitch{
+        
+        
+        let switchControl = UISwitch(frame:CGRect.init(x: 10, y: 20, width: 0, height: 0))
+        switchControl.isOn = true
+        switchControl.setOn(true, animated: false)
+        switchControl.addTarget(self, action: #selector(switchValueDidChange(sender:)), for: .valueChanged);
+        return switchControl
+    }
+    
+    func switchValueDidChange(sender:UISwitch!){
+        
+        print("[DEBUG] monitor session for normal : \(sender.isOn))")
+        globalVariables.monitorTypeFlag = sender.isOn
+        var message = "\nInput a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)"
+        var title = "Start Monitoring"
+        if !sender.isOn{
+            message = "\nYou have chosen to do a running monitoring session. \nInput a monitor time in minutes (1-120). \n(*Sensor config will be forced to 100Hz)"
+            title = "Start Monitoring\n (Running)"
+        }
+        self.monitorAlert.title = title
+        self.monitorAlert.message = message
+    }
+    
     @IBAction func monitorBtnClk(_ sender: Any) {
         print("[DEBUG] monitor button clicked")
-        let alert = UIAlertController(title: "Start Monitoring", message: "Input a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)", preferredStyle: UIAlertControllerStyle.alert)
-        let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
-        alert.addTextField(configurationHandler: configurationTextField)
-        alert.addAction(voidAction)
-        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler:{ (UIAlertAction)in
-            let monitorTimeDec = Int((alert.textFields?[0].text)!)!
-            if monitorTimeDec > 4320 {
-                let notValidTimeAlert = UIAlertController(title: "ERROR", message: "The time you entered is not Valid", preferredStyle: UIAlertControllerStyle.alert)
-                notValidTimeAlert.addAction(voidAction)
-                self.present(notValidTimeAlert, animated: false, completion: nil)
-            }
-            else{
-                print("[DEBUG] user input monitor time: \(monitorTimeDec) minutes")
-                let success = globalVariables.BLEHandler.startMonitoring(time: monitorTimeDec)
-                var message = "start monitoring failed"
-                if success{
-                    message = "start monitoring successful"
-                }
-                let monitorSuccessAlert = UIAlertController(title: "start monitoring", message: message, preferredStyle: UIAlertControllerStyle.alert)
-                monitorSuccessAlert.addAction(voidAction)
-                self.present(monitorSuccessAlert, animated: false, completion: nil)
-            }
-        }))
-        self.present(alert, animated: true, completion: nil)
+        
+
+        self.present(self.monitorAlert, animated: true, completion: nil)
     }
     
     @IBAction func compressedDataOffloadBtnClk(_ sender: Any) {

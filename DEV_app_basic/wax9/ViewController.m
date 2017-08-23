@@ -302,8 +302,8 @@ double tempFS[MaxDevicesToPair];
     if ([localName length] > 0)
     {
         //detect all sensors or ones with specific name
-        //if( [localName hasPrefix:@"MDM"]){
-        if( [localName hasPrefix:@"MDM-A601"] || [localName hasPrefix:@"MDM-9200"])  {
+        if( [localName hasPrefix:@"MDM"]){
+        //if( [localName hasPrefix:@"MDM-DA"] || [localName hasPrefix:@"MDM-4E"])  {
             //if( [localName hasPrefix:@"WAX9"] )  {
             NSLog(@"Found Sensor(%@) with UUID (%@)", localName,peripheral.identifier.UUIDString);
             
@@ -437,7 +437,13 @@ double tempFS[MaxDevicesToPair];
             hex = [@"0" stringByAppendingString:hex];
         }
     }
-    hex = [hex stringByAppendingString:@"0200"];
+    if(hours > 50){
+        hex = [hex stringByAppendingString:@"0500"];
+    }
+    else{
+        hex = [hex stringByAppendingString:@"0200"];
+    }
+    
     NSLog(@"Derek: monitor time: %d hours, coeff %@",hours,hex);
     NSData *data = [hex hexToBytes];
     return data;
@@ -488,7 +494,7 @@ double tempFS[MaxDevicesToPair];
                             if([aChar.UUID isEqual:[CBUUID UUIDWithString:HRTZ1000_START_STREAMING_UUID]]){
                                 //[peripheral setNotifyValue:true forCharacteristic:aChar];
                                 //0x03 for normal monitoring, 0x04 for running compression
-                                NSData *data = [NSData dataWithBytes:(Byte[]){0x04} length:1];
+                                NSData *data = [NSData dataWithBytes:(Byte[]){0x03} length:1];
                                 [peripheral writeValue:data forCharacteristic:aChar type:CBCharacteristicWriteWithResponse];
                                 NSLog(@"start monitoring: for device: %@, write data: %@, to uuid: %@", peripheral.name,data,aChar.UUID.UUIDString);
                             }

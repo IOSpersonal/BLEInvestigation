@@ -13,6 +13,9 @@ struct globalVariables {
     static let BLEHandler = BLEController()
     static var allSensorList = [String]()
     static let FileHandler = CustomFileManager()
-    static let MaxNumOfDevice = 4 // maximum device to pair with
+    //maximum device to pair with
+    static let MaxNumOfDevice = 4
+    //monitor type - true for normal, false for running
+    static var monitorTypeFlag = true
     
 }
