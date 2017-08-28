@@ -435,6 +435,15 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
         if characteristic.uuid.uuidString == MDM_STREAMDATA_UUID {
+            //prompt for confirm streaming status on BLEViewController
+            let isAlreadyStreaming = self.BLEViewController?.confirmStreamingState()
+            if isAlreadyStreaming!{
+                for i in 0...self.activePeripherals.count-1{
+                    let filename = (self.activePeripherals[i].name)! + "_stream.txt"
+                    self.streamFileNames.append(filename)
+                }
+            }
+            //get data
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
             let strvalue = datavalue?.hexEncodedString()
@@ -442,6 +451,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             //update status bar to see data coming, comment to accelerate offload
             self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
             let sensorData = [UInt8](datavalue!)
+            
+            //Process ACC
             let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
             let Ax_signed:Int16 = Int16(bitPattern: Ax)
             let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
@@ -452,12 +463,57 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             let Az_signed:Int16 = Int16(bitPattern: Az)
             let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
             print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
+            
+            //Process GYRO
+            let Gx = UInt16(sensorData[7]) << 8 | UInt16(sensorData[6])
+            let Gx_signed:Int16 = Int16(bitPattern: Gx)
+            let fgx = Double(Gx_signed) * 0.00762939453125
+            let Gy = UInt16(sensorData[9]) << 8 | UInt16(sensorData[8])
+            let Gy_signed:Int16 = Int16(bitPattern: Gy)
+            let fgy = Double(Gy_signed) * 0.00762939453125
+            let Gz = UInt16(sensorData[11]) << 8 | UInt16(sensorData[10])
+            let Gz_signed:Int16 = Int16(bitPattern: Gz)
+            let fgz = Double(Gz_signed) * 0.00762939453125
+            print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
+            
+            //Process MAG
+            let Mx = UInt16(sensorData[13]) << 8 | UInt16(sensorData[12])
+            let Mx_signed:Int16 = Int16(bitPattern: Mx)
+            let fmx = Double(Mx_signed)
+            let My = UInt16(sensorData[15]) << 8 | UInt16(sensorData[14])
+            let My_signed:Int16 = Int16(bitPattern: My)
+            let fmy = Double(My_signed)
+            let Mz = UInt16(sensorData[17]) << 8 | UInt16(sensorData[16])
+            let Mz_signed:Int16 = Int16(bitPattern: Mz)
+            let fmz = Double(Mz_signed)
+            print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
+            //check data source type
+            var fx:Double
+            var fy:Double
+            var fz:Double
+            switch self.BLEViewController!.graphViewDataType {
+            case 1:
+                fx = fgx
+                fy = fgy
+                fz = fgz
+                break
+            case 2:
+                fx = fmx
+                fy = fmy
+                fz = fmz
+                break
+            default:
+                fx = fax
+                fy = fay
+                fz = faz
+                break
+            }
             //show plot only for first device
             if targetDevice == 0{
                 if (self.BLEViewController?.arrayCounter)! < 40 {
-                    self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fax
-                    self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fay
-                    self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = faz
+                    self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
+                    self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
+                    self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
                     self.BLEViewController?.arrayCounter += 1
                 }
                 else{
@@ -466,10 +522,11 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                         self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
                         self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
                     }
-                    self.BLEViewController?.Ax_plot[39] = fax
-                    self.BLEViewController?.Ay_plot[39] = fay
-                    self.BLEViewController?.Az_plot[39] = faz
+                    self.BLEViewController?.Ax_plot[39] = fx
+                    self.BLEViewController?.Ay_plot[39] = fy
+                    self.BLEViewController?.Az_plot[39] = fz
                 }
+                print("[TEMP DEBUG] reload graph")
                 self.BLEViewController?.graph.reloadData()
             }
         }

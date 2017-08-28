@@ -13,7 +13,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     @IBOutlet var statusLabel: UILabel!
     @IBOutlet var streamDataLbl: UILabel!
     @IBOutlet var streamBtn: UIButton!
-    @IBOutlet var stopStreamBtn: UIButton!
+
     @IBOutlet var graphView: CPTGraphHostingView!
     
     var graph = CPTXYGraph(frame: CGRect.zero)
@@ -21,15 +21,20 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     var Ay_plot = Array(repeating: 0.0, count: 40)
     var Az_plot = Array(repeating: 0.0, count: 40)
     var arrayCounter = 0;
+    
     private var offloadAlert = UIAlertController()
     private let monitorAlert = UIAlertController(title: "Start Monitoring", message: "\nInput a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)", preferredStyle: UIAlertControllerStyle.alert)
     private let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
+    
+    //Streaming flag
+    private var isStreaming = false
+    //graph view data type 0 for acc, 1 for gyro 2 for mag
+    var graphViewDataType:Int = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
         globalVariables.BLEHandler.passBLEView(view: self)
         self.updateStatus(value: globalVariables.appStatus)
-        self.stopStreamBtn.isEnabled = false
         // Do any additional setup after loading the view.
         //init alertview
         self.offloadAlert = UIAlertController(title: nil, message: "Offloading, Please wait...\n\n\n", preferredStyle: UIAlertControllerStyle.alert)
@@ -86,7 +91,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         blueLineStyle.lineWidth = 3.0
         blueLineStyle.lineColor = .blue()
         curve_accx.dataLineStyle = blueLineStyle
-        curve_accx.identifier = NSString.init(string: "Ax")
+        curve_accx.identifier = NSString.init(string: "x")
         curve_accx.dataSource = self
         self.graph.add(curve_accx, to: graph.defaultPlotSpace)
         
@@ -96,7 +101,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         greenLineStyle.lineWidth = 3.0
         greenLineStyle.lineColor = .green()
         curve_accy.dataLineStyle = greenLineStyle
-        curve_accy.identifier = NSString.init(string: "Ay")
+        curve_accy.identifier = NSString.init(string: "y")
         curve_accy.dataSource = self
         self.graph.add(curve_accy, to: graph.defaultPlotSpace)
         
@@ -106,13 +111,13 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         redLineStyle.lineWidth = 3.0
         redLineStyle.lineColor = .red()
         curve_accz.dataLineStyle = redLineStyle
-        curve_accz.identifier = NSString.init(string: "Az")
+        curve_accz.identifier = NSString.init(string: "z")
         curve_accz.dataSource = self
         self.graph.add(curve_accz, to: graph.defaultPlotSpace)
         
         //add title
         print("[DEBUG] add graph title")
-        let titleString = "accelerometer data"
+        let titleString = "streamed data"
         let titleFont = UIFont(name: "Helvetica-Bold", size: 16.0)
         let graphTitle = NSMutableAttributedString(string: titleString)
         let paragraphStyle = NSMutableParagraphStyle()
@@ -159,6 +164,58 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
             }
         }))
     }
+    @IBAction func dataSourceBtnClk(_ sender: Any) {
+        //change data source of graph view
+        let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace
+        let axes = graph.axisSet as! CPTXYAxisSet
+        let alert = UIAlertController(title: "Switch Data Source", message: "Please choose from below data source.", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction.init(title: "Acc", style: UIAlertActionStyle.default, handler: {
+            (alert: UIAlertAction!) in
+            self.graphViewDataType = 0
+            print("[DEBUG] graph data type set to Acc")
+            plotSpace.globalYRange = nil
+            plotSpace.yRange = CPTPlotRange(location: -5.0, length: 10.0)
+            plotSpace.globalYRange = plotSpace.yRange
+            if let y = axes.yAxis{
+                y.majorIntervalLength = 1.0
+                y.minorTicksPerInterval = 1
+                y.labelExclusionRanges = [
+                    CPTPlotRange(location: -0.01, length: 0.02)
+                ]
+            }
+        }))
+        alert.addAction(UIAlertAction.init(title: "Gyro", style: UIAlertActionStyle.default, handler: {
+            (alert: UIAlertAction!) in
+            self.graphViewDataType = 1
+            print("[DEBUG] graph data type set to Gyro")
+            plotSpace.globalYRange = nil
+            plotSpace.yRange = CPTPlotRange(location: -250.0, length: 500.0)
+            plotSpace.globalYRange = plotSpace.yRange
+            if let y = axes.yAxis{
+                y.majorIntervalLength = 50.0
+                y.minorTicksPerInterval = 1
+                y.labelExclusionRanges = [
+                    CPTPlotRange(location: -0.01, length: 0.02)
+                ]
+            }
+        }))
+        alert.addAction(UIAlertAction.init(title: "Mag", style: UIAlertActionStyle.default, handler: {
+            (alert: UIAlertAction!) in
+            self.graphViewDataType = 2
+            print("[DEBUG] graph data type set to Mag")
+            plotSpace.globalYRange = nil
+            plotSpace.yRange = CPTPlotRange(location: -5.0, length: 10.0)
+            plotSpace.globalYRange = plotSpace.yRange
+            if let y = axes.yAxis{
+                y.majorIntervalLength = 1.0
+                y.minorTicksPerInterval = 1
+                y.labelExclusionRanges = [
+                    CPTPlotRange(location: -0.01, length: 0.02)
+                ]
+            }
+        }))
+        self.present(alert, animated: true, completion: nil)
+    }
     
     func numberOfRecords(for plot: CPTPlot) -> UInt {
         //plot length
@@ -169,7 +226,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         //set value for plots
         let plotfield = CPTScatterPlotField(rawValue: Int(fieldEnum))
         let plotID = plot.identifier as! String
-        if (plotfield == .Y) && (plotID == "Ax"){
+        if (plotfield == .Y) && (plotID == "x"){
             if( idx>=0 )&&( idx<40 ){
                 return self.Ax_plot[Int(idx)]
             }
@@ -177,14 +234,14 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
                 return 0
             }
         }
-        else if(plotfield == .Y) && (plotID == "Ay"){
+        else if(plotfield == .Y) && (plotID == "y"){
             if( idx>=0 )&&( idx<40 ){
                 return self.Ay_plot[Int(idx)]
             }
             else{
                 return 0
             }
-        }else if(plotfield == .Y) && (plotID == "Az"){
+        }else if(plotfield == .Y) && (plotID == "z"){
             if( idx>=0 )&&( idx<40 ){
                 return self.Az_plot[Int(idx)]
             }
@@ -201,18 +258,33 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+    func confirmStreamingState() -> Bool{
+        if self.isStreaming == false{
+            print("[DEBUG] one or more connected sensor is already streaming!")
+            self.isStreaming = true
+            self.updateStatus(value: "Streaming")
+            self.streamBtn.setTitle("STOP", for: UIControlState.normal)
+            return true
+        }
+        return false
+    }
+    
     @IBAction func startStreamBtnClk(_ sender: Any) {
-        globalVariables.BLEHandler.startStreaming()
-        self.streamBtn.isEnabled = false
-        self.stopStreamBtn.isEnabled = true
-        self.updateStatus(value: "Streaming")
+        if !self.isStreaming{
+            globalVariables.BLEHandler.startStreaming()
+            self.updateStatus(value: "Streaming")
+            self.streamBtn.setTitle("STOP", for: UIControlState.normal)
+            self.isStreaming = true
+        }
+        else{
+            globalVariables.BLEHandler.stopStreaming()
+            self.updateStatus(value: "Stopped Streaming")
+            self.streamBtn.setTitle("STREAM", for: UIControlState.normal)
+            self.isStreaming = false
+        }
     }
-    @IBAction func stopStreamBtnClk(_ sender: Any) {
-        globalVariables.BLEHandler.stopStreaming()
-        self.stopStreamBtn.isEnabled = false
-        self.streamBtn.isEnabled = true
-        self.updateStatus(value: "Connected")
-    }
+
     
     func configurationTextField(textField: UITextField!)
     {

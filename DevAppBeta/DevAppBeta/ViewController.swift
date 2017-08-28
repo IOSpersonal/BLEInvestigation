@@ -72,6 +72,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell:UITableViewCell = self.DeviceListTableView.dequeueReusableCell(withIdentifier: "cell") as UITableViewCell!
         cell.textLabel?.text = globalVariables.allSensorList[indexPath.row]
+        cell.backgroundColor = UIColor.white
         return cell
     }
     
@@ -79,12 +80,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if self.targetDeviceIndices.contains(indexPath.row){
             print("[DEBUG] remove from selected: \(self.targetDeviceIndices[(self.targetDeviceIndices as AnyObject).index(of: indexPath.row)])")
             self.targetDeviceIndices.remove(at: (self.targetDeviceIndices as AnyObject).index(of: indexPath.row))
+            tableView.cellForRow(at: indexPath)?.backgroundColor = UIColor.white
             
         }
         else if(self.targetDeviceIndices.count < globalVariables.MaxNumOfDevice){
             print("[DEBUG] add to selected: \(globalVariables.allSensorList[indexPath.row])")
             self.targetDeviceIndices.append(indexPath.row)
-            
+            tableView.cellForRow(at: indexPath)?.backgroundColor = UIColor.blue
         }
         if self.targetDeviceIndices.count > 0 {
             var statusString = "selected: "
