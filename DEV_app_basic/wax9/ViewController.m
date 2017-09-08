@@ -303,7 +303,7 @@ double tempFS[MaxDevicesToPair];
     {
         //detect all sensors or ones with specific name
         //if( [localName hasPrefix:@"MDM"]){
-        if( [localName hasPrefix:@"MDM-0059"] || [localName hasPrefix:@"MDM-0039"])  {
+        if( [localName hasPrefix:@"MDM-4D16"] || [localName hasPrefix:@"MDM-4D16"])  {
             //if( [localName hasPrefix:@"WAX9"] )  {
             NSLog(@"Found Sensor(%@) with UUID (%@)", localName,peripheral.identifier.UUIDString);
             

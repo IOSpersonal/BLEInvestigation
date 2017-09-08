@@ -31,7 +31,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //scan button click event
     @IBAction func scanBtnClk(_ sender: Any) {
-        
+        globalVariables.allSensorList.removeAll()
         _ = globalVariables.BLEHandler.startScanning(timeout: 5)
     }
     

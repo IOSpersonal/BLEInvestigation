@@ -28,6 +28,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     //Streaming flag
     private var isStreaming = false
+    var isWaitingForStopStreaming = false
     //graph view data type 0 for acc, 1 for gyro 2 for mag
     var graphViewDataType:Int = 0
 
@@ -260,7 +261,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     func confirmStreamingState() -> Bool{
-        if self.isStreaming == false{
+        if self.isStreaming == false && !self.isWaitingForStopStreaming{
             print("[DEBUG] one or more connected sensor is already streaming!")
             self.isStreaming = true
             self.updateStatus(value: "Streaming")
@@ -282,6 +283,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
             self.updateStatus(value: "Stopped Streaming")
             self.streamBtn.setTitle("STREAM", for: UIControlState.normal)
             self.isStreaming = false
+            self.isWaitingForStopStreaming = true
         }
     }
 
@@ -317,8 +319,6 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     @IBAction func monitorBtnClk(_ sender: Any) {
         print("[DEBUG] monitor button clicked")
-        
-
         self.present(self.monitorAlert, animated: true, completion: nil)
     }
     
@@ -371,6 +371,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     @IBAction func backBtnClk(_ sender: Any) {
         print("[DEBUG] back button pressed: return to main ViewController")
         _ = globalVariables.BLEHandler.disconnectAllPeripheral()
+        globalVariables.allSensorList.removeAll()
     }
     
     
@@ -385,14 +386,5 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         print("[DEBUG] received streaming data: \(value)")
         streamDataLbl.text = value
     }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }

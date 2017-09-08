@@ -11,6 +11,8 @@
 		6C426B9ADAA48543A7E57EC4 /* Pods_DevAppBetaTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01526D908663F5C2E42A3A97 /* Pods_DevAppBetaTests.framework */; };
 		9F6A2E391F271114003D9E4C /* globalVars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A2E381F271114003D9E4C /* globalVars.swift */; };
 		9F6A2E3B1F2841E5003D9E4C /* CustomFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */; };
+		9F8830431F56961600A678CE /* FWUpgradeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8830421F56961600A678CE /* FWUpgradeViewController.swift */; };
+		9F8830471F60BDA700A678CE /* firmware in Resources */ = {isa = PBXBuildFile; fileRef = 9F8830461F60BDA700A678CE /* firmware */; };
 		9F9B79D51F43D7D6005B2E39 /* CorePlot.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9B79D41F43D7D6005B2E39 /* CorePlot.framework */; };
 		9F9B79D71F43DA34005B2E39 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9B79D61F43DA34005B2E39 /* QuartzCore.framework */; };
 		9FC54FF31F42C2910014484A /* image in Resources */ = {isa = PBXBuildFile; fileRef = 9FC54FF21F42C2910014484A /* image */; };
@@ -52,6 +54,8 @@
 		2D0B3FF74B959B8A98FDE933 /* Pods-DevAppBetaUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DevAppBetaUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DevAppBetaUITests/Pods-DevAppBetaUITests.release.xcconfig"; sourceTree = "<group>"; };
 		9F6A2E381F271114003D9E4C /* globalVars.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = globalVars.swift; sourceTree = "<group>"; };
 		9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomFileManager.swift; sourceTree = "<group>"; };
+		9F8830421F56961600A678CE /* FWUpgradeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWUpgradeViewController.swift; sourceTree = "<group>"; };
+		9F8830461F60BDA700A678CE /* firmware */ = {isa = PBXFileReference; lastKnownFileType = folder; path = firmware; sourceTree = "<group>"; };
 		9F9B79D01F43CF9D005B2E39 /* DevAppBeta-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DevAppBeta-Bridging-Header.h"; sourceTree = "<group>"; };
 		9F9B79D41F43D7D6005B2E39 /* CorePlot.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CorePlot.framework; path = "../../../../../Library/Developer/Xcode/DerivedData/DevAppBeta-cvdkgiggcczbzuhkzdazbleajujw/Build/Products/Debug-iphoneos/CorePlot/CorePlot.framework"; sourceTree = "<group>"; };
 		9F9B79D61F43DA34005B2E39 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -160,7 +164,9 @@
 			children = (
 				9FCA101C1F21C44900F37C51 /* AppDelegate.swift */,
 				9FCA104A1F21C47200F37C51 /* BLEViewController.swift */,
+				9F8830461F60BDA700A678CE /* firmware */,
 				9FCA101E1F21C44900F37C51 /* ViewController.swift */,
+				9F8830421F56961600A678CE /* FWUpgradeViewController.swift */,
 				9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */,
 				9FCA104C1F21C4F400F37C51 /* BLEController.swift */,
 				9F6A2E381F271114003D9E4C /* globalVars.swift */,
@@ -314,6 +320,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9FC54FF31F42C2910014484A /* image in Resources */,
+				9F8830471F60BDA700A678CE /* firmware in Resources */,
 				9FCA10271F21C44900F37C51 /* LaunchScreen.storyboard in Resources */,
 				9FCA10241F21C44900F37C51 /* Assets.xcassets in Resources */,
 				9FCA10221F21C44900F37C51 /* Main.storyboard in Resources */,
@@ -495,6 +502,7 @@
 				9FCA104D1F21C4F400F37C51 /* BLEController.swift in Sources */,
 				9F6A2E391F271114003D9E4C /* globalVars.swift in Sources */,
 				9F6A2E3B1F2841E5003D9E4C /* CustomFileManager.swift in Sources */,
+				9F8830431F56961600A678CE /* FWUpgradeViewController.swift in Sources */,
 				9FCA101F1F21C44900F37C51 /* ViewController.swift in Sources */,
 				9FCA104F1F21D4CF00F37C51 /* AttitudeEstimate.swift in Sources */,
 				9FCA101D1F21C44900F37C51 /* AppDelegate.swift in Sources */,

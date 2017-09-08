@@ -17,5 +17,7 @@ struct globalVariables {
     static let MaxNumOfDevice = 4
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
-    
+    //FW update maximum transfer size
+    static let maxTransferUnit = 19
+    static var currentNumOfDevice = 0
 }

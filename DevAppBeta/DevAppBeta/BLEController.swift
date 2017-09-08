@@ -26,17 +26,25 @@ extension Data{
 
 class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
-    let MDM_SERVICE_UUID            = "00000005-0008-A8BA-E311-F48C90364D99"
-    let MDM_COMMAND_UUID            = "00000006-0008-A8BA-E311-F48C90364D99"
-    let MDM_SCALE_UUID              = "0000000A-0008-A8BA-E311-F48C90364D99"
-    let MDM_SESSIONID_UUID          = "0000000C-0008-A8BA-E311-F48C90364D99"
-    let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
-    let MDM_OFFLOAD_UUID            = "00000011-0008-A8BA-E311-F48C90364D99"
-    let MDM_OFFLOADDATA_UUID        = "00000012-0008-A8BA-E311-F48C90364D99"
+    //TZ Custom UUIDs
+    private let MDM_SERVICE_UUID            = "00000005-0008-A8BA-E311-F48C90364D99"
+    private let MDM_COMMAND_UUID            = "00000006-0008-A8BA-E311-F48C90364D99"
+    private let MDM_SCALE_UUID              = "0000000A-0008-A8BA-E311-F48C90364D99"
+    private let MDM_SESSIONID_UUID          = "0000000C-0008-A8BA-E311-F48C90364D99"
+    private let MDM_TIMECALCOEFF_UUID       = "0000000F-0008-A8BA-E311-F48C90364D99"
+    private let MDM_STREAMDATA_UUID         = "00000010-0008-A8BA-E311-F48C90364D99"
+    private let MDM_OFFLOAD_UUID            = "00000011-0008-A8BA-E311-F48C90364D99"
+    private let MDM_OFFLOADDATA_UUID        = "00000012-0008-A8BA-E311-F48C90364D99"
+    //FW Upgrade UUIDs
+    private let FWUPDATE_SERVICE_UUID       = "ECA95120-F940-11E4-9ED0-0002A5D5C51B"
+    private let FWUPDATE_CONTROL_POINT_UUID = "4D294BE0-F941-11E4-BCCE-0002A5D5C51B"
+    private let FWUPDATE_INPUT_CHAR_UUID    = "C1C8A4A0-F941-11E4-A534-0002A5D5C51B"
+    private let FWUPDATE_CRC_INPUT_UUID     = "173710C0-F942-11E4-9B99-0002A5D5C51B"
 
     var delegate: BLEDelegate?
     var mainViewController: ViewController?
     var BLEViewController: BLEViewController?
+    var FWUpgradeViewController: FWUpgradeViewController?
     
     private      var centralManager:        CBCentralManager!
     private      var activePeripherals      = [CBPeripheral]()
@@ -44,18 +52,22 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var data:                  NSMutableData?
     private(set) var peripherals            = [CBPeripheral]()
     private      var RSSICompletionHandler: ((NSNumber?, NSError?) -> ())?
+    //time for checking reloading gragh
+    private      var lastReloadTime:UInt32
+    private      var reloadGap:UInt32       = 100
     //string for saving all offloaded data
     private      var offloadStrings         = [String]()
     //string for saving all streamed data
-    private      var streamStrings          = [String]()
+    // private      var streamStrings          = [String]()
     //for fetching specific lost packet
     private      var fetchIndices           = [Int]()
     //bool flag for checking offload finished for fetching lost data
     private      var isOffloadFinished      = [Bool]()
     //bool flag for checking offload all finished including getting lost data
-    private      var isOffloadCompleted      = [Bool]()
+    private      var isOffloadCompleted     = [Bool]()
     //accelerometer scale
     private      var accScales              = [Double]()
+    //current connected peripheral count
     private      var peripheralCount        = 0
     //for checking packet loss
     private      var lastSeqNums            = [UInt16]()
@@ -63,13 +75,20 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //file names for streaming and offloading
     private      var offloadFileNames       = [String]()
     private      var streamFileNames        = [String]()
-    
+    private      var timeCalLogFileNames    = [String]()
+    //[DEV] temp variable for synchronised monitoring
+    private      var syncTimeArray          = [UInt32]()
+    //[DEV] temp variable for time Calibration
+    private      var lastTimeCalStr         = [String]()
+    //buffer for updating firmware binary
+    private      var FWBuf                  = [UInt8]()
     
     override init() {
+        self.lastReloadTime = UInt32(CACurrentMediaTime()*1000)
         super.init()
-        
         self.centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
         self.data = NSMutableData()
+        
     }
     
     func passMainView(view: ViewController){
@@ -81,6 +100,10 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         print("[DEBUG] passBLEView is called")
         self.BLEViewController = view
     }
+    func passFWUpgradeView(view: FWUpgradeViewController){
+        print("[DEBUG] passBLEView is called")
+        self.FWUpgradeViewController = view
+    }
     
     @objc private func scanTimeout() {
         
@@ -90,7 +113,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     // MARK: Public methods
     func startScanning(timeout: Double) -> Bool {
-        
+        self.peripherals.removeAll()
         if self.centralManager.state != .poweredOn {
             
             print("[ERROR] Couldn´t start scanning")
@@ -191,13 +214,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
             globalVariables.appStatus = "streamComplete"
             self.BLEViewController?.updateStatus(value: "streamComplete, writing to file")
-            globalVariables.FileHandler.writeFile(filename: self.streamFileNames[i], text: self.streamStrings[i])
+            //switch to write file instantly when streaming
+            //globalVariables.FileHandler.writeFile(filename: self.streamFileNames[i], text: self.streamStrings[i])
         }
         
     }
     
     func generateSessionID(intValue: Int) -> Data {
-        var profileID:UInt8 = UInt8(0x02)
+        var profileID:UInt8 = UInt8(0x00)
         if intValue>3000{
             //change to 20/20/0 Hz if > 50 hours
             print("[DEBUG] long monitor: change profile")
@@ -228,6 +252,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             data = Data(bytes: [0x04])
         }
         for i in 0...n{
+            //remove previous synch monitor results
+            self.syncTimeArray.removeAll()
             guard let char = self.characteristics[i][MDM_SESSIONID_UUID] else {return false}
             self.activePeripherals[i].writeValue(sessionID, for: char, type: .withResponse)
 
@@ -254,6 +280,89 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             guard let char = self.characteristics[i][MDM_OFFLOAD_UUID] else {return}
             self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
         }
+    }
+    
+    func eraseDevices() -> Bool{
+    //erase device for FW Upgrade
+        let data = Data(bytes: [0x00,0x00,0x00,0x02])
+        for i in 0...self.activePeripherals.count-1{
+            guard let char = self.characteristics[i][MDM_SESSIONID_UUID] else {return false}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+        }
+        return true
+    }
+    
+    //start time calibration
+    func startTimeCalibration() -> Bool{
+        let data = Data(bytes: [0x06])
+        for i in 0...self.activePeripherals.count-1{
+            guard let char = self.characteristics[i][MDM_COMMAND_UUID] else {return false}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+            let filename = (self.activePeripherals[i].name)! + "_timeCalLog.txt"
+            self.timeCalLogFileNames.append(filename)
+            self.lastTimeCalStr.append("")
+            if globalVariables.FileHandler.fileExist(filename: filename){
+                globalVariables.FileHandler.deleteFile(filename: filename)
+            }
+        }
+        return true
+    }
+    
+    //stop time calibration
+    func stopTimeCalibration() -> Bool{
+        //check Log file
+        for i in 0...self.activePeripherals.count-1{
+            let filename = (self.activePeripherals[i].name)! + "_timeCalLog.txt"
+            if !globalVariables.FileHandler.fileExist(filename: filename){
+                print("[DEBUG] error, the sensor connected does not match time calibration log")
+                return false
+            }
+        }
+        //check if app has restarted in between
+        if self.timeCalLogFileNames.count == 0{
+            for i in 0...self.activePeripherals.count-1{
+                let filename = (self.activePeripherals[i].name)! + "_timeCalLog.txt"
+                self.timeCalLogFileNames.append(filename)
+            }
+        }
+        //calculate and write coeffs
+        for i in 0...self.activePeripherals.count-1{
+            let tempStrStart = globalVariables.FileHandler.readFileAsString(filename: self.timeCalLogFileNames[i])
+            let APPTimeStart = Int(tempStrStart.substring(to: (tempStrStart.range(of: "+")?.lowerBound)!))
+            let APPTimeEnd = Int(self.lastTimeCalStr[i].substring(to: (lastTimeCalStr[i].range(of: "+")?.lowerBound)!))
+            let SensorTimeStart = Int(tempStrStart.substring(from: (tempStrStart.range(of: "+")?.upperBound)!))
+            let SensorTimeEnd = Int(self.lastTimeCalStr[i].substring(from: (self.lastTimeCalStr[i].range(of: "+")?.upperBound)!))
+            let sensorTimeDuration = UInt32(SensorTimeEnd! - SensorTimeStart!)
+            let timeDifference = UInt32(bitPattern: Int32(APPTimeEnd! - APPTimeStart!) - Int32(sensorTimeDuration))
+            var coeff = [UInt8]()
+            coeff.append(UInt8(0x01))
+            coeff.append(UInt8(timeDifference&0x000000ff))
+            coeff.append(UInt8((timeDifference>>8)&0x000000ff))
+            coeff.append(UInt8((timeDifference>>16)&0x000000ff))
+            coeff.append(UInt8((timeDifference>>24)&0x000000ff))
+            coeff.append(UInt8(sensorTimeDuration&0x000000ff))
+            coeff.append(UInt8((sensorTimeDuration>>8)&0x000000ff))
+            coeff.append(UInt8((sensorTimeDuration>>16)&0x000000ff))
+            coeff.append(UInt8((sensorTimeDuration>>24)&0x000000ff))
+            print("[DEBUG] time cal coeff is calculated as \(coeff) from startStr: \(tempStrStart) and endStr: \(self.lastTimeCalStr[i])")
+            let coeffData = Data(bytes: coeff)
+            guard let char = self.characteristics[i][MDM_TIMECALCOEFF_UUID] else {return false}
+            self.activePeripherals[i].writeValue(coeffData, for: char, type: .withResponse)
+        }
+        
+        //stop streaming for all
+        let data = Data(bytes: [0x07])
+        for i in 0...self.activePeripherals.count-1{
+            guard let char = self.characteristics[i][MDM_COMMAND_UUID] else {return false}
+            self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+        }
+        return true
+    }
+    
+    //update FW
+    func startUpdateFWWithFile(filename: String){
+        self.FWBuf = globalVariables.FileHandler.openFWBinFile(filename: filename)
+        print("[DEBUG] open Firmware Bin file, length: \(FWBuf.count), first and last values: \(FWBuf[0]), \(FWBuf[FWBuf.count-1])")
     }
     
     // MARK: CBCentralManager delegate
@@ -309,12 +418,13 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("[DEBUG] Connected to peripheral \(peripheral.name ?? "nil")")
         //initialise variables for new peripheral
+        globalVariables.currentNumOfDevice += 1
         self.activePeripherals.append(peripheral)
         self.activePeripherals[self.peripheralCount].delegate = self
         self.activePeripherals[self.peripheralCount].discoverServices([CBUUID(string: MDM_SERVICE_UUID)])
         self.accScales.append(1.0)
         self.offloadStrings.append("")
-        self.streamStrings.append("")
+        //self.streamStrings.append("")
         self.lastSeqNums.append(0)
         self.characteristics.append([:])
         self.peripheralCount += 1
@@ -329,11 +439,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         print(text)
         //remove all references
+        globalVariables.currentNumOfDevice -= 1
+        let targetDeviceInAllSensorList = (self.peripherals as AnyObject).index(of: peripheral)
+        self.peripherals.remove(at: targetDeviceInAllSensorList)
         let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
         self.activePeripherals[targetDevice].delegate = nil
         self.activePeripherals.remove(at: targetDevice)
         self.accScales.remove(at: targetDevice)
-        self.streamStrings.remove(at: targetDevice)
+        //self.streamStrings.remove(at: targetDevice)
         self.offloadStrings.remove(at: targetDevice)
         self.lastSeqNums.remove(at: targetDevice)
         if self.offloadFileNames.count > 0{
@@ -344,8 +457,37 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         if self.streamFileNames.count > 0{
             self.streamFileNames.remove(at: targetDevice)
         }
+        if self.timeCalLogFileNames.count > 0{
+            self.timeCalLogFileNames.remove(at: targetDevice)
+        }
         self.peripheralCount -= 1
         self.characteristics.remove(at: targetDevice)
+        //check if all sensors disconnected
+        if self.activePeripherals.count == 0{
+            print("[DEBUG] all sensors disconnected, navigate to main view")
+            if var topController = UIApplication.shared.keyWindow?.rootViewController{
+                while let presentedViewController = topController.presentedViewController{
+                    topController = presentedViewController
+                }
+                let viewName = NSStringFromClass(topController.classForCoder)
+                print("[DEBUG] current view: \(viewName), will push to mainView")
+                switch viewName {
+                case "DevAppBeta.BLEViewController":
+                    topController.performSegue(withIdentifier: "BLEViewToMainView", sender: nil)
+                    break
+                case "DevAppBeta.FWUpgradeViewController":
+                    topController.performSegue(withIdentifier: "updateViewToMainView", sender: nil)
+                    break
+                default:
+                    break
+                }
+                //rescan
+                globalVariables.allSensorList.removeAll()
+                _ = self.startScanning(timeout: 5)
+                
+            }
+            
+        }
         self.delegate?.bleDidDisconenctFromPeripheral()
     }
 
@@ -366,7 +508,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                                       CBUUID(string: MDM_OFFLOAD_UUID),
                                       CBUUID(string: MDM_OFFLOADDATA_UUID),
                                       CBUUID(string: MDM_SESSIONID_UUID),
-                                      CBUUID(string: MDM_SCALE_UUID)]
+                                      CBUUID(string: MDM_SCALE_UUID),
+                                      CBUUID(string: MDM_TIMECALCOEFF_UUID)]
             peripheral.discoverCharacteristics(theCharacteristics, for: service)
         }
  
@@ -416,6 +559,9 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
         if characteristic.uuid.uuidString == MDM_COMMAND_UUID {
             print("[DEBUG] write response for ble command")
+            if (self.BLEViewController?.isWaitingForStopStreaming)! {
+                self.BLEViewController?.isWaitingForStopStreaming = false
+            }
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
             let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
@@ -427,7 +573,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        print("[DEBUG] sensor: \(peripheral.name ?? "nil") did update value")
+        let timeIphone = UInt32(CACurrentMediaTime()*1000)
+        print("[DEBUG] sensor: \(peripheral.name ?? "nil") did update value, at time: \(timeIphone)")
         if error != nil {
             
             print("[ERROR] Error updating value. \(error.debugDescription)")
@@ -435,100 +582,160 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         let targetDevice = (self.activePeripherals as AnyObject).index(of: peripheral)
         if characteristic.uuid.uuidString == MDM_STREAMDATA_UUID {
-            //prompt for confirm streaming status on BLEViewController
-            let isAlreadyStreaming = self.BLEViewController?.confirmStreamingState()
-            if isAlreadyStreaming!{
-                for i in 0...self.activePeripherals.count-1{
-                    let filename = (self.activePeripherals[i].name)! + "_stream.txt"
-                    self.streamFileNames.append(filename)
-                }
-            }
-            //get data
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
             let datavalue = characteristic.value
-            let strvalue = datavalue?.hexEncodedString()
-            self.streamStrings[targetDevice] += strvalue!
-            //update status bar to see data coming, comment to accelerate offload
-            self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
-            let sensorData = [UInt8](datavalue!)
+            print("[DEBUG] streamed data length: \(datavalue?.count ?? 0)")
             
-            //Process ACC
-            let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
-            let Ax_signed:Int16 = Int16(bitPattern: Ax)
-            let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
-            let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
-            let Ay_signed:Int16 = Int16(bitPattern: Ay)
-            let fay = Double(Ay_signed) / 8192.0 * self.accScales[targetDevice]
-            let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
-            let Az_signed:Int16 = Int16(bitPattern: Az)
-            let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
-            print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
-            
-            //Process GYRO
-            let Gx = UInt16(sensorData[7]) << 8 | UInt16(sensorData[6])
-            let Gx_signed:Int16 = Int16(bitPattern: Gx)
-            let fgx = Double(Gx_signed) * 0.00762939453125
-            let Gy = UInt16(sensorData[9]) << 8 | UInt16(sensorData[8])
-            let Gy_signed:Int16 = Int16(bitPattern: Gy)
-            let fgy = Double(Gy_signed) * 0.00762939453125
-            let Gz = UInt16(sensorData[11]) << 8 | UInt16(sensorData[10])
-            let Gz_signed:Int16 = Int16(bitPattern: Gz)
-            let fgz = Double(Gz_signed) * 0.00762939453125
-            print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
-            
-            //Process MAG
-            let Mx = UInt16(sensorData[13]) << 8 | UInt16(sensorData[12])
-            let Mx_signed:Int16 = Int16(bitPattern: Mx)
-            let fmx = Double(Mx_signed)
-            let My = UInt16(sensorData[15]) << 8 | UInt16(sensorData[14])
-            let My_signed:Int16 = Int16(bitPattern: My)
-            let fmy = Double(My_signed)
-            let Mz = UInt16(sensorData[17]) << 8 | UInt16(sensorData[16])
-            let Mz_signed:Int16 = Int16(bitPattern: Mz)
-            let fmz = Double(Mz_signed)
-            print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
-            //check data source type
-            var fx:Double
-            var fy:Double
-            var fz:Double
-            switch self.BLEViewController!.graphViewDataType {
-            case 1:
-                fx = fgx
-                fy = fgy
-                fz = fgz
-                break
-            case 2:
-                fx = fmx
-                fy = fmy
-                fz = fmz
-                break
-            default:
-                fx = fax
-                fy = fay
-                fz = faz
-                break
+            if datavalue?.count == 20{
+                //normal streaming
+                //prompt for confirm streaming status on BLEViewController
+                let isAlreadyStreaming = self.BLEViewController?.confirmStreamingState()
+                if isAlreadyStreaming!{
+                    for i in 0...self.activePeripherals.count-1{
+                        let filename = (self.activePeripherals[i].name)! + "_stream.txt"
+                        self.streamFileNames.append(filename)
+                    }
+                }
+                //get data
+                let strvalue = datavalue?.hexEncodedString()
+                //self.streamStrings[targetDevice] += strvalue!
+                globalVariables.FileHandler.writeFile(filename: self.streamFileNames[targetDevice], text: strvalue!)
+                //update status bar to see data coming, comment to accelerate offload
+                self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
+                let sensorData = [UInt8](datavalue!)
+                
+                //Process ACC
+                let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
+                let Ax_signed:Int16 = Int16(bitPattern: Ax)
+                let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
+                let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
+                let Ay_signed:Int16 = Int16(bitPattern: Ay)
+                let fay = Double(Ay_signed) / 8192.0 * self.accScales[targetDevice]
+                let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
+                let Az_signed:Int16 = Int16(bitPattern: Az)
+                let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
+                print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
+                
+                //Process GYRO
+                let Gx = UInt16(sensorData[7]) << 8 | UInt16(sensorData[6])
+                let Gx_signed:Int16 = Int16(bitPattern: Gx)
+                let fgx = Double(Gx_signed) * 0.00762939453125
+                let Gy = UInt16(sensorData[9]) << 8 | UInt16(sensorData[8])
+                let Gy_signed:Int16 = Int16(bitPattern: Gy)
+                let fgy = Double(Gy_signed) * 0.00762939453125
+                let Gz = UInt16(sensorData[11]) << 8 | UInt16(sensorData[10])
+                let Gz_signed:Int16 = Int16(bitPattern: Gz)
+                let fgz = Double(Gz_signed) * 0.00762939453125
+                print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
+                
+                //Process MAG
+                let Mx = UInt16(sensorData[13]) << 8 | UInt16(sensorData[12])
+                let Mx_signed:Int16 = Int16(bitPattern: Mx)
+                let fmx = Double(Mx_signed)
+                let My = UInt16(sensorData[15]) << 8 | UInt16(sensorData[14])
+                let My_signed:Int16 = Int16(bitPattern: My)
+                let fmy = Double(My_signed)
+                let Mz = UInt16(sensorData[17]) << 8 | UInt16(sensorData[16])
+                let Mz_signed:Int16 = Int16(bitPattern: Mz)
+                let fmz = Double(Mz_signed)
+                print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
+                //check data source type
+                var fx:Double
+                var fy:Double
+                var fz:Double
+                switch self.BLEViewController!.graphViewDataType {
+                case 1:
+                    fx = fgx
+                    fy = fgy
+                    fz = fgz
+                    break
+                case 2:
+                    fx = fmx
+                    fy = fmy
+                    fz = fmz
+                    break
+                default:
+                    fx = fax
+                    fy = fay
+                    fz = faz
+                    break
+                }
+                //show plot only for first device
+                if targetDevice == 0{
+                    if (self.BLEViewController?.arrayCounter)! < 40 {
+                        self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
+                        self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
+                        self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
+                        self.BLEViewController?.arrayCounter += 1
+                    }
+                    else{
+                        for i in 0...38{
+                            self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
+                            self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
+                            self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+                        }
+                        self.BLEViewController?.Ax_plot[39] = fx
+                        self.BLEViewController?.Ay_plot[39] = fy
+                        self.BLEViewController?.Az_plot[39] = fz
+                    }
+                    let curTime = UInt32(CACurrentMediaTime()*1000)
+                    let gap = curTime - self.lastReloadTime
+                    if (gap > self.reloadGap){
+                        //reload graph every 100ms
+                        self.lastReloadTime = curTime
+                        self.BLEViewController?.graph.reloadData()
+                    }
+                }
+
             }
-            //show plot only for first device
-            if targetDevice == 0{
-                if (self.BLEViewController?.arrayCounter)! < 40 {
-                    self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
-                    self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
-                    self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
-                    self.BLEViewController?.arrayCounter += 1
+            else if datavalue?.count == 6{
+                //monitor starting - V6b synchronised monitoring
+                
+                print("[DEBUG] synchronised monitoring streaming period")
+                let sensorValue = [UInt8](datavalue!)
+                let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                if (self.syncTimeArray.count==0 && peripheral.name == self.activePeripherals[0].name){
+                    print("[DEBUG] timestamp from device 1 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
+                    self.syncTimeArray.append(timeSensor)
+                    self.syncTimeArray.append(timeIphone)
+                }
+                else if(self.syncTimeArray.count==2 && peripheral.name == self.activePeripherals[1].name){
+                    print("[DEBUG] timestamp from device 2 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
+                    self.syncTimeArray.append(timeSensor)
+                    self.syncTimeArray.append(timeIphone)
+                }
+                else if(self.syncTimeArray.count==4){
+                    let delay = Double(syncTimeArray[3]) - Double(syncTimeArray[1]) - (Double(syncTimeArray[2]) - Double(syncTimeArray[0]))
+                    let delayStr = "end of time synchronisation, the second sensor (\(self.activePeripherals[1].name ?? "nil")) started \(delay)ms later than the first sensor (\(self.activePeripherals[0].name ?? "nil"))"
+                    print("[DEBUG] \(delayStr)")
+                    self.FWUpgradeViewController?.syncMonitorDidCalculateDelay(delay: delay, message: delayStr)
+                    self.syncTimeArray.append(0)
+                }
+            }
+            else if datavalue?.count == 4{
+                //time calibration streamming period
+                print("[DEBUG] streaming for time calibration")
+                let sensorValue = [UInt8](datavalue!)
+                let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                if(globalVariables.FileHandler.fileExist(filename: self.timeCalLogFileNames[targetDevice])){
+                    //check if app restarted
+                    if self.lastTimeCalStr.count == 0{
+                        for _ in 0...self.activePeripherals.count-1{
+                            self.lastTimeCalStr.append("")
+                        }
+                    }
+                    let timeCalStr = "\(timeIphone)+\(timeSensor)"
+                    lastTimeCalStr[targetDevice] = timeCalStr
+
                 }
                 else{
-                    for i in 0...38{
-                        self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
-                        self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
-                        self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
-                    }
-                    self.BLEViewController?.Ax_plot[39] = fx
-                    self.BLEViewController?.Ay_plot[39] = fy
-                    self.BLEViewController?.Az_plot[39] = fz
+                    print("[DEBUG] time calibration log file does not exist, creating...，iphone time: \(timeIphone), sensor time: \(timeSensor)")
+                    let timeCalStr = "\(timeIphone)+\(timeSensor)"
+                    globalVariables.FileHandler.writeFile(filename: self.timeCalLogFileNames[targetDevice], text: timeCalStr)
                 }
-                print("[TEMP DEBUG] reload graph")
-                self.BLEViewController?.graph.reloadData()
+                
             }
+            
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
