@@ -123,9 +123,9 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         let graphTitle = NSMutableAttributedString(string: titleString)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
-        graphTitle.addAttribute(NSForegroundColorAttributeName, value: UIColor.white, range: NSRange(location: 0, length: titleString.utf16.count))
-        graphTitle.addAttribute(NSParagraphStyleAttributeName, value: paragraphStyle, range: NSRange(location: 0, length: graphTitle.length))
-        graphTitle.addAttribute(NSFontAttributeName, value: titleFont!, range: NSRange(location: 0, length: titleString.utf16.count))
+        graphTitle.addAttribute(NSAttributedStringKey.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: titleString.utf16.count))
+        graphTitle.addAttribute(NSAttributedStringKey.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: graphTitle.length))
+        graphTitle.addAttribute(NSAttributedStringKey.font, value: titleFont!, range: NSRange(location: 0, length: titleString.utf16.count))
         
         self.graph.attributedTitle = graphTitle
         
@@ -303,7 +303,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         return switchControl
     }
     
-    func switchValueDidChange(sender:UISwitch!){
+    @objc func switchValueDidChange(sender:UISwitch!){
         
         print("[DEBUG] monitor session for normal : \(sender.isOn))")
         globalVariables.monitorTypeFlag = sender.isOn

@@ -697,7 +697,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 if self.activePeripherals.count == 2{
                     print("[DEBUG] synchronised monitoring streaming period")
                     let sensorValue = [UInt8](datavalue!)
-                    let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                    var timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16
+                    timeSensor = timeSensor | (UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0]))
                     if (self.syncTimeArray.count==0 && peripheral.name == self.activePeripherals[0].name){
                         print("[DEBUG] timestamp from device 1 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
                         self.syncTimeArray.append(timeSensor)
@@ -727,7 +728,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     //time calibration streamming period
                     print("[DEBUG] streaming for time calibration")
                     let sensorValue = [UInt8](datavalue!)
-                    let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                    var timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16
+                    timeSensor = timeSensor | (UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0]))
                     if(globalVariables.FileHandler.fileExist(filename: self.timeCalLogFileNames[targetDevice])){
                         //check if app restarted
                         if self.lastTimeCalStr.count == 0{
