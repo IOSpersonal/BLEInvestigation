@@ -69,6 +69,7 @@
 @property (strong, nonatomic) IBOutlet UILabel          *device3;
 @property (strong, nonatomic) IBOutlet UILabel          *device4;
 @property (strong, nonatomic) IBOutlet UIButton *setMonitorTimeBtn;
+
 - (IBAction)setMonitorTime:(id)sender;
 
 - (IBAction)startMonitoring:(id)sender;

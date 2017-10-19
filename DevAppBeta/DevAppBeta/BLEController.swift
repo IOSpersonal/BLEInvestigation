@@ -65,6 +65,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var isOffloadFinished      = [Bool]()
     //bool flag for checking offload all finished including getting lost data
     private      var isOffloadCompleted     = [Bool]()
+    //var for calculating offload time
+    private      var timeOffloadStarted     = 0.0
     //accelerometer scale
     private      var accScales              = [Double]()
     //current connected peripheral count
@@ -80,6 +82,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var syncTimeArray          = [UInt32]()
     //[DEV] temp variable for time Calibration
     private      var lastTimeCalStr         = [String]()
+    //[DEV] bool for checking if should response stream start
+    public       var isServingStreamStart   = false
     //buffer for updating firmware binary
     private      var FWBuf                  = [UInt8]()
     
@@ -269,6 +273,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.lostSeqNums.removeAll(keepingCapacity: false)
         self.fetchIndices.removeAll(keepingCapacity: false)
         self.offloadFileNames.removeAll(keepingCapacity: false)
+        self.timeOffloadStarted = CACurrentMediaTime()
         for i in 0...self.activePeripherals.count-1{
             self.isOffloadFinished.append(false)
             self.isOffloadCompleted.append(false)
@@ -279,6 +284,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             let data = Data(bytes: [0x06])
             guard let char = self.characteristics[i][MDM_OFFLOAD_UUID] else {return}
             self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
+            print("[DEBUG] start offloading")
         }
     }
     
@@ -589,12 +595,10 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             if datavalue?.count == 20{
                 //normal streaming
                 //prompt for confirm streaming status on BLEViewController
-                let isAlreadyStreaming = self.BLEViewController?.confirmStreamingState()
-                if isAlreadyStreaming!{
-                    for i in 0...self.activePeripherals.count-1{
-                        let filename = (self.activePeripherals[i].name)! + "_stream.txt"
-                        self.streamFileNames.append(filename)
-                    }
+                self.BLEViewController?.confirmStreamingState()
+                if(!self.streamFileNames.contains(peripheral.name! + "_stream.txt")){
+                    let filename = (peripheral.name)! + "_stream.txt"
+                    self.streamFileNames.append(filename)
                 }
                 //get data
                 let strvalue = datavalue?.hexEncodedString()
@@ -690,52 +694,59 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             }
             else if datavalue?.count == 6{
                 //monitor starting - V6b synchronised monitoring
-                
-                print("[DEBUG] synchronised monitoring streaming period")
-                let sensorValue = [UInt8](datavalue!)
-                let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
-                if (self.syncTimeArray.count==0 && peripheral.name == self.activePeripherals[0].name){
-                    print("[DEBUG] timestamp from device 1 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
-                    self.syncTimeArray.append(timeSensor)
-                    self.syncTimeArray.append(timeIphone)
-                }
-                else if(self.syncTimeArray.count==2 && peripheral.name == self.activePeripherals[1].name){
-                    print("[DEBUG] timestamp from device 2 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
-                    self.syncTimeArray.append(timeSensor)
-                    self.syncTimeArray.append(timeIphone)
-                }
-                else if(self.syncTimeArray.count==4){
-                    let delay = Double(syncTimeArray[3]) - Double(syncTimeArray[1]) - (Double(syncTimeArray[2]) - Double(syncTimeArray[0]))
-                    let delayStr = "end of time synchronisation, the second sensor (\(self.activePeripherals[1].name ?? "nil")) started \(delay)ms later than the first sensor (\(self.activePeripherals[0].name ?? "nil"))"
-                    print("[DEBUG] \(delayStr)")
-                    self.FWUpgradeViewController?.syncMonitorDidCalculateDelay(delay: delay, message: delayStr)
-                    self.syncTimeArray.append(0)
+                if self.activePeripherals.count == 2{
+                    print("[DEBUG] synchronised monitoring streaming period")
+                    let sensorValue = [UInt8](datavalue!)
+                    let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                    if (self.syncTimeArray.count==0 && peripheral.name == self.activePeripherals[0].name){
+                        print("[DEBUG] timestamp from device 1 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
+                        self.syncTimeArray.append(timeSensor)
+                        self.syncTimeArray.append(timeIphone)
+                    }
+                    else if(self.syncTimeArray.count==2 && peripheral.name == self.activePeripherals[1].name){
+                        print("[DEBUG] timestamp from device 2 (\(peripheral.name ?? "nil")) streamed timestamp: \(timeSensor) iphone time: \(timeIphone)")
+                        self.syncTimeArray.append(timeSensor)
+                        self.syncTimeArray.append(timeIphone)
+                    }
+                    else if(self.syncTimeArray.count==4){
+                        let delay = Double(syncTimeArray[3]) - Double(syncTimeArray[1]) - (Double(syncTimeArray[2]) - Double(syncTimeArray[0]))
+                        let delayStr = "end of time synchronisation, the second sensor (\(self.activePeripherals[1].name ?? "nil")) started \(delay)ms later than the first sensor (\(self.activePeripherals[0].name ?? "nil"))"
+                        print("[DEBUG] \(delayStr)")
+                        if(self.FWUpgradeViewController != nil){
+                            if ((self.FWUpgradeViewController?.isViewLoaded)! && ((self.FWUpgradeViewController?.view.window) != nil)) {
+                                // viewController is visible
+                                self.FWUpgradeViewController?.syncMonitorDidCalculateDelay(delay: delay, message: delayStr)
+                            }
+                        }
+                        self.syncTimeArray.append(0)
+                    }
                 }
             }
             else if datavalue?.count == 4{
-                //time calibration streamming period
-                print("[DEBUG] streaming for time calibration")
-                let sensorValue = [UInt8](datavalue!)
-                let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
-                if(globalVariables.FileHandler.fileExist(filename: self.timeCalLogFileNames[targetDevice])){
-                    //check if app restarted
-                    if self.lastTimeCalStr.count == 0{
-                        for _ in 0...self.activePeripherals.count-1{
-                            self.lastTimeCalStr.append("")
+                if self.isServingStreamStart{
+                    //time calibration streamming period
+                    print("[DEBUG] streaming for time calibration")
+                    let sensorValue = [UInt8](datavalue!)
+                    let timeSensor = UInt32(sensorValue[3]) << 24 | UInt32(sensorValue[2]) << 16 | UInt32(sensorValue[1]) << 8 | UInt32(sensorValue[0])
+                    if(globalVariables.FileHandler.fileExist(filename: self.timeCalLogFileNames[targetDevice])){
+                        //check if app restarted
+                        if self.lastTimeCalStr.count == 0{
+                            for _ in 0...self.activePeripherals.count-1{
+                                self.lastTimeCalStr.append("")
+                            }
                         }
+                        let timeCalStr = "\(timeIphone)+\(timeSensor)"
+                        lastTimeCalStr[targetDevice] = timeCalStr
+                        
                     }
-                    let timeCalStr = "\(timeIphone)+\(timeSensor)"
-                    lastTimeCalStr[targetDevice] = timeCalStr
-
+                    else{
+                        print("[DEBUG] time calibration log file does not exist, creating...，iphone time: \(timeIphone), sensor time: \(timeSensor)")
+                        let timeCalStr = "\(timeIphone)+\(timeSensor)"
+                        globalVariables.FileHandler.writeFile(filename: self.timeCalLogFileNames[targetDevice], text: timeCalStr)
+                        self.isServingStreamStart = false
+                    }
                 }
-                else{
-                    print("[DEBUG] time calibration log file does not exist, creating...，iphone time: \(timeIphone), sensor time: \(timeSensor)")
-                    let timeCalStr = "\(timeIphone)+\(timeSensor)"
-                    globalVariables.FileHandler.writeFile(filename: self.timeCalLogFileNames[targetDevice], text: timeCalStr)
-                }
-                
             }
-            
         }
         else if characteristic.uuid.uuidString == MDM_OFFLOADDATA_UUID {
             self.delegate?.bleDidReceiveData(data: characteristic.value! as NSData)
@@ -771,10 +782,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     self.isOffloadCompleted[targetDevice] = true
                     if !self.isOffloadCompleted.contains(false){
                         self.BLEViewController?.dismissOffloadSpinner()
+                        let offloadEndTime = CACurrentMediaTime()
+                        let offloadDuration = offloadEndTime - self.timeOffloadStarted
+                        self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration)
                     }
                 }
             }
             else if (strvalue?.hasPrefix("03ffff"))!{
+                
                 //end of offloading, get lost packets
                 self.isOffloadFinished[targetDevice] = true
                 if !self.lostSeqNums[targetDevice].isEmpty {
@@ -800,6 +815,9 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     self.isOffloadCompleted[targetDevice] = true
                     if !self.isOffloadCompleted.contains(false){
                         self.BLEViewController?.dismissOffloadSpinner()
+                        let offloadEndTime = CACurrentMediaTime()
+                        let offloadDuration = offloadEndTime - self.timeOffloadStarted
+                        self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration)
                     }
                 }
                 

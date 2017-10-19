@@ -29,6 +29,7 @@
 
 #import "ViewController.h"
 
+
 @interface ViewController ()
 @end
 
@@ -130,7 +131,7 @@ double tempFS[MaxDevicesToPair];
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+
     //private/var/folders/vg/2hltpvqj4_932fmp3mb_myzc0000gp/T/temp.zKEJCc/WAX9WAX9-DF96.txt/ Setup
     _status.text = @"Waiting on name";
     _gyroscope.text = @"gx,gy,gz";
@@ -303,7 +304,7 @@ double tempFS[MaxDevicesToPair];
     {
         //detect all sensors or ones with specific name
         //if( [localName hasPrefix:@"MDM"]){
-        if( [localName hasPrefix:@"MDM-4D16"] || [localName hasPrefix:@"MDM-4D16"])  {
+        if( [localName hasPrefix:@"MDM-0051"] || [localName hasPrefix:@"MDM-0059"])  {
             //if( [localName hasPrefix:@"WAX9"] )  {
             NSLog(@"Found Sensor(%@) with UUID (%@)", localName,peripheral.identifier.UUIDString);
             

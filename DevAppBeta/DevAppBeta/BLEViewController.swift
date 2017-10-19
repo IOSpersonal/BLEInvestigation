@@ -334,6 +334,12 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         self.offloadAlert.dismiss(animated: false, completion: nil)
     }
     
+    func showOffloadCompleteAlertWithDuration(duration: Double){
+        let alert = UIAlertController(title: "offload completed", message: "offload completed, elapsed time: \(duration)", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "OK", style:UIAlertActionStyle.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     @IBAction func flushBtnClk(_ sender: Any) {
         let alert = UIAlertController(title: "confirm flush", message: "are you sure to delete all files from document folder?", preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "confirm", style: UIAlertActionStyle.default, handler: { action in

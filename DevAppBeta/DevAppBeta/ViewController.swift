@@ -13,14 +13,19 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet var connectBtn: UIButton!
     @IBOutlet var DeviceListTableView: UITableView!
     var targetDeviceIndices: [Int] = [Int]()
+    private var isInitialised = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.DeviceListTableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        globalVariables.BLEHandler.passMainView(view: self)
-        globalVariables.appStatus = "initialised"
-        self.updateStatus(value: globalVariables.appStatus)
-        self.connectBtn.isEnabled = false
+        if !self.isInitialised{
+            self.DeviceListTableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+            globalVariables.BLEHandler.passMainView(view: self)
+            globalVariables.appStatus = "initialised"
+            self.updateStatus(value: globalVariables.appStatus)
+            self.connectBtn.isEnabled = false
+            self.isInitialised = true
+        }
+
         // Do any additional setup after loading the view, typically from a nib.
     }
 

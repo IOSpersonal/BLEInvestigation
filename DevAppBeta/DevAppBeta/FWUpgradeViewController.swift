@@ -21,7 +21,7 @@ class FWUpgradeViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if(!isInitialsed){
+        if(!self.isInitialsed){
             self.initialiseFWUpgradeViewController()
             self.isInitialsed = true
         }
@@ -38,6 +38,7 @@ class FWUpgradeViewController: UIViewController {
     func initialiseFWUpgradeViewController(){
         //do this after there is default files available
         globalVariables.FileHandler.copyDefaultFile()
+        self.updateFWProgressBar.setProgress(0.0, animated: false)
         globalVariables.BLEHandler.passFWUpgradeView(view: self)
         self.monitorAlert.addTextField(configurationHandler: configurationTextField)
         self.monitorAlert.addAction(voidAction)
@@ -55,8 +56,10 @@ class FWUpgradeViewController: UIViewController {
             }
             else{
                 print("[DEBUG] user input monitor time: \(monitorTimeDec) minutes")
+                globalVariables.BLEHandler.isServingStreamStart = true
                 let success = globalVariables.BLEHandler.startMonitoring(time: monitorTimeDec)
                 if !success{
+                    globalVariables.BLEHandler.isServingStreamStart = false
                     let monitorFailAlert = UIAlertController(title: "ERROR", message: "start monitoring failed", preferredStyle: UIAlertControllerStyle.alert)
                     monitorFailAlert.addAction(self.voidAction)
                     self.present(monitorFailAlert, animated: false, completion: nil)
