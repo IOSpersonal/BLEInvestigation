@@ -45,7 +45,9 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     var mainViewController: ViewController?
     var BLEViewController: BLEViewController?
     var FWUpgradeViewController: FWUpgradeViewController?
-    
+    var attitudeEstimator: AttitudeEstimator?
+    private      var lastStreamingTime      = 0.0
+    private      var isInitialised          = false
     private      var centralManager:        CBCentralManager!
     private      var activePeripherals      = [CBPeripheral]()
     private      var characteristics        = [[String : CBCharacteristic]]()
@@ -53,7 +55,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private(set) var peripherals            = [CBPeripheral]()
     private      var RSSICompletionHandler: ((NSNumber?, NSError?) -> ())?
     //time for checking reloading gragh
-    private      var lastReloadTime:UInt32
+    private      var lastReloadTime:UInt32  = 0
     private      var reloadGap:UInt32       = 100
     //string for saving all offloaded data
     private      var offloadStrings         = [String]()
@@ -88,10 +90,18 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private      var FWBuf                  = [UInt8]()
     
     override init() {
-        self.lastReloadTime = UInt32(CACurrentMediaTime()*1000)
-        super.init()
-        self.centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
-        self.data = NSMutableData()
+        if !self.isInitialised{
+            self.lastReloadTime = UInt32(CACurrentMediaTime()*1000)
+            self.attitudeEstimator = AttitudeEstimator.init()
+            self.lastStreamingTime = CACurrentMediaTime()
+            super.init()
+            self.centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
+            self.data = NSMutableData()
+            self.isInitialised = true
+        }
+        else{
+            super.init()
+        }
         
     }
     
@@ -203,6 +213,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func startStreaming(){
         let data = Data(bytes: [0x01])
+        self.lastStreamingTime = CACurrentMediaTime()
         for i in 0...self.activePeripherals.count-1{
             guard let char = self.characteristics[i][MDM_COMMAND_UUID] else {return}
             self.activePeripherals[i].writeValue(data, for: char, type: .withResponse)
@@ -368,7 +379,9 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //update FW
     func startUpdateFWWithFile(filename: String){
         self.FWBuf = globalVariables.FileHandler.openFWBinFile(filename: filename)
-        print("[DEBUG] open Firmware Bin file, length: \(FWBuf.count), first and last values: \(FWBuf[0]), \(FWBuf[FWBuf.count-1])")
+        print("[DEBUG] read Firmware Bin file, length: \(FWBuf.count), first and last values: \(FWBuf[0]), \(FWBuf[FWBuf.count-1])")
+        let crc32Calculator = CRC32.init(data: Data.init(bytes: FWBuf))
+        print("[DEBUG] crc is calculated as \(crc32Calculator.hashValue)")
     }
     
     // MARK: CBCentralManager delegate
@@ -428,6 +441,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.activePeripherals.append(peripheral)
         self.activePeripherals[self.peripheralCount].delegate = self
         self.activePeripherals[self.peripheralCount].discoverServices([CBUUID(string: MDM_SERVICE_UUID)])
+        //for failsafe sensors, discover update service
+        self.activePeripherals[self.peripheralCount].discoverServices([CBUUID(string: FWUPDATE_SERVICE_UUID)])
         self.accScales.append(1.0)
         self.offloadStrings.append("")
         //self.streamStrings.append("")
@@ -515,11 +530,13 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                                       CBUUID(string: MDM_OFFLOADDATA_UUID),
                                       CBUUID(string: MDM_SESSIONID_UUID),
                                       CBUUID(string: MDM_SCALE_UUID),
-                                      CBUUID(string: MDM_TIMECALCOEFF_UUID)]
+                                      CBUUID(string: MDM_TIMECALCOEFF_UUID),
+                                      CBUUID(string: FWUPDATE_CRC_INPUT_UUID),
+                                      CBUUID(string: FWUPDATE_INPUT_CHAR_UUID),
+                                      CBUUID(string: FWUPDATE_CONTROL_POINT_UUID)
+                                      ]
             peripheral.discoverCharacteristics(theCharacteristics, for: service)
         }
- 
-
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
@@ -643,6 +660,15 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 let Mz_signed:Int16 = Int16(bitPattern: Mz)
                 let fmz = Double(Mz_signed)
                 print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
+                
+                //Perform attitude estimate
+                if true{
+                    let deltaT = (CACurrentMediaTime() - self.lastStreamingTime)
+                    self.lastStreamingTime = CACurrentMediaTime()
+                    let q = self.attitudeEstimator?.EKFProcessStepWithData(accx: fax, accy: fay, accz: faz, gyrox: fgx, gyroy: fgy, gyroz: fgz, deltaT: deltaT)
+                    print("[Attitude Estimate] \(q)")
+                }
+                
                 //check data source type
                 var fx:Double
                 var fy:Double
@@ -828,7 +854,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 //check if lost packet
                 let currentSeqNum: UInt16 = UInt16((datavalue?[1])!) * 256 + UInt16((datavalue?[2])!)
                 if ((currentSeqNum == 0) || ((currentSeqNum - self.lastSeqNums[targetDevice]) == 1)){
-                    //this is okay
+                    //no lost packet
                     self.lastSeqNums[targetDevice] = currentSeqNum
                 }
                 else{
