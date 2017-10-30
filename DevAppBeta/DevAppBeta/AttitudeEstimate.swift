@@ -86,6 +86,7 @@ class AttitudeEstimator: NSObject {
     }
     
     func invert(matrix : [Double]) -> [Double] {
+        //calculate inverse of matrix
         var inMatrix = matrix
         var N = __CLPK_integer(sqrt(Double(matrix.count)))
         var pivots = [__CLPK_integer](repeating: 0, count: Int(N))
@@ -159,7 +160,7 @@ class AttitudeEstimator: NSObject {
         vDSP_vaddD(tempProduct6,1,self.R_Matrix,1,&S_Matrix,1,vDSP_Length(tempProduct6.count))
         var tempProduct7 = Array.init(repeating: 0.0, count: 49)
         vDSP_mmulD(PPrior_Matrix,1,H_Transpose,1,&tempProduct7,1,7,7,7)
-        var S_Inverse = self.invert(matrix: S_Matrix)
+        let S_Inverse = self.invert(matrix: S_Matrix)
         var K_Matrix = Array.init(repeating: 0.0, count: 49)
         vDSP_mmulD(tempProduct7,1,S_Inverse,1,&K_Matrix,1,7,7,7)
         var tempProduct8 = Array.init(repeating: 0.0, count: 7)

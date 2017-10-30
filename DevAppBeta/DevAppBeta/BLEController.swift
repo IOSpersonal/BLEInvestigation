@@ -609,7 +609,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             let datavalue = characteristic.value
             print("[DEBUG] streamed data length: \(datavalue?.count ?? 0)")
             
-            if datavalue?.count == 20{
+            if (datavalue?.count == 20 && self.BLEViewController != nil){
                 //normal streaming
                 //prompt for confirm streaming status on BLEViewController
                 self.BLEViewController?.confirmStreamingState()
@@ -623,100 +623,106 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 globalVariables.FileHandler.writeFile(filename: self.streamFileNames[targetDevice], text: strvalue!)
                 //update status bar to see data coming, comment to accelerate offload
                 self.BLEViewController?.updateStreamDataLbl(value: strvalue!)
-                let sensorData = [UInt8](datavalue!)
                 
-                //Process ACC
-                let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
-                let Ax_signed:Int16 = Int16(bitPattern: Ax)
-                let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
-                let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
-                let Ay_signed:Int16 = Int16(bitPattern: Ay)
-                let fay = Double(Ay_signed) / 8192.0 * self.accScales[targetDevice]
-                let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
-                let Az_signed:Int16 = Int16(bitPattern: Az)
-                let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
-                print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
-                
-                //Process GYRO
-                let Gx = UInt16(sensorData[7]) << 8 | UInt16(sensorData[6])
-                let Gx_signed:Int16 = Int16(bitPattern: Gx)
-                let fgx = Double(Gx_signed) * 0.00762939453125
-                let Gy = UInt16(sensorData[9]) << 8 | UInt16(sensorData[8])
-                let Gy_signed:Int16 = Int16(bitPattern: Gy)
-                let fgy = Double(Gy_signed) * 0.00762939453125
-                let Gz = UInt16(sensorData[11]) << 8 | UInt16(sensorData[10])
-                let Gz_signed:Int16 = Int16(bitPattern: Gz)
-                let fgz = Double(Gz_signed) * 0.00762939453125
-                print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
-                
-                //Process MAG
-                let Mx = UInt16(sensorData[13]) << 8 | UInt16(sensorData[12])
-                let Mx_signed:Int16 = Int16(bitPattern: Mx)
-                let fmx = Double(Mx_signed)
-                let My = UInt16(sensorData[15]) << 8 | UInt16(sensorData[14])
-                let My_signed:Int16 = Int16(bitPattern: My)
-                let fmy = Double(My_signed)
-                let Mz = UInt16(sensorData[17]) << 8 | UInt16(sensorData[16])
-                let Mz_signed:Int16 = Int16(bitPattern: Mz)
-                let fmz = Double(Mz_signed)
-                print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
-                
-                //Perform attitude estimate
-                if true{
-                    let deltaT = (CACurrentMediaTime() - self.lastStreamingTime)
-                    self.lastStreamingTime = CACurrentMediaTime()
-                    let q = self.attitudeEstimator?.EKFProcessStepWithData(accx: fax, accy: fay, accz: faz, gyrox: fgx, gyroy: fgy, gyroz: fgz, deltaT: deltaT)
-                    print("[Attitude Estimate] \(q)")
-                }
-                
-                //check data source type
-                var fx:Double
-                var fy:Double
-                var fz:Double
-                switch self.BLEViewController!.graphViewDataType {
-                case 1:
-                    fx = fgx
-                    fy = fgy
-                    fz = fgz
-                    break
-                case 2:
-                    fx = fmx
-                    fy = fmy
-                    fz = fmz
-                    break
-                default:
-                    fx = fax
-                    fy = fay
-                    fz = faz
-                    break
-                }
-                //show plot only for first device
-                if targetDevice == 0{
-                    if (self.BLEViewController?.arrayCounter)! < 40 {
-                        self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
-                        self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
-                        self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
-                        self.BLEViewController?.arrayCounter += 1
+                if (self.BLEViewController?.viewcontrollerShouldShowPlot)!{
+                    //process and plot
+                    let sensorData = [UInt8](datavalue!)
+                    
+                    //Process ACC
+                    let Ax = UInt16(sensorData[1]) << 8 | UInt16(sensorData[0])
+                    let Ax_signed:Int16 = Int16(bitPattern: Ax)
+                    let fax = Double(Ax_signed) / 8192.0 * self.accScales[targetDevice]
+                    let Ay = UInt16(sensorData[3]) << 8 | UInt16(sensorData[2])
+                    let Ay_signed:Int16 = Int16(bitPattern: Ay)
+                    let fay = Double(Ay_signed) / 8192.0 * self.accScales[targetDevice]
+                    let Az = UInt16(sensorData[5]) << 8 | UInt16(sensorData[4])
+                    let Az_signed:Int16 = Int16(bitPattern: Az)
+                    let faz = Double(Az_signed) / 8192.0 * self.accScales[targetDevice]
+                    print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
+                    
+                    //Process GYRO
+                    let Gx = UInt16(sensorData[7]) << 8 | UInt16(sensorData[6])
+                    let Gx_signed:Int16 = Int16(bitPattern: Gx)
+                    let fgx = Double(Gx_signed) * 0.00762939453125
+                    let Gy = UInt16(sensorData[9]) << 8 | UInt16(sensorData[8])
+                    let Gy_signed:Int16 = Int16(bitPattern: Gy)
+                    let fgy = Double(Gy_signed) * 0.00762939453125
+                    let Gz = UInt16(sensorData[11]) << 8 | UInt16(sensorData[10])
+                    let Gz_signed:Int16 = Int16(bitPattern: Gz)
+                    let fgz = Double(Gz_signed) * 0.00762939453125
+                    print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
+                    
+                    //Process MAG
+                    let Mx = UInt16(sensorData[13]) << 8 | UInt16(sensorData[12])
+                    let Mx_signed:Int16 = Int16(bitPattern: Mx)
+                    let fmx = Double(Mx_signed)
+                    let My = UInt16(sensorData[15]) << 8 | UInt16(sensorData[14])
+                    let My_signed:Int16 = Int16(bitPattern: My)
+                    let fmy = Double(My_signed)
+                    let Mz = UInt16(sensorData[17]) << 8 | UInt16(sensorData[16])
+                    let Mz_signed:Int16 = Int16(bitPattern: Mz)
+                    let fmz = Double(Mz_signed)
+                    print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
+                    
+                    //Perform attitude estimate
+                    if true{
+                        let deltaT = (CACurrentMediaTime() - self.lastStreamingTime)
+                        self.lastStreamingTime = CACurrentMediaTime()
+                        let time1 = CACurrentMediaTime()
+                        let q = self.attitudeEstimator?.EKFProcessStepWithData(accx: fax, accy: fay, accz: faz, gyrox: fgx, gyroy: fgy, gyroz: fgz, deltaT: deltaT)
+                        print("[Attitude Estimate] \(q) deltaT: \(deltaT)")
+                        let duration = CACurrentMediaTime() - time1
+                        print("[TEMPDEBUG] timeElapsed: \(duration * 1000) ms")
                     }
-                    else{
-                        for i in 0...38{
-                            self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
-                            self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
-                            self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+                    
+                    //check data source type
+                    var fx:Double
+                    var fy:Double
+                    var fz:Double
+                    switch self.BLEViewController!.graphViewDataType {
+                    case 1:
+                        fx = fgx
+                        fy = fgy
+                        fz = fgz
+                        break
+                    case 2:
+                        fx = fmx
+                        fy = fmy
+                        fz = fmz
+                        break
+                    default:
+                        fx = fax
+                        fy = fay
+                        fz = faz
+                        break
+                    }
+                    //show plot only for first device
+                    if targetDevice == 0{
+                        if (self.BLEViewController?.arrayCounter)! < 40 {
+                            self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
+                            self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
+                            self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
+                            self.BLEViewController?.arrayCounter += 1
                         }
-                        self.BLEViewController?.Ax_plot[39] = fx
-                        self.BLEViewController?.Ay_plot[39] = fy
-                        self.BLEViewController?.Az_plot[39] = fz
-                    }
-                    let curTime = UInt32(CACurrentMediaTime()*1000)
-                    let gap = curTime - self.lastReloadTime
-                    if (gap > self.reloadGap){
-                        //reload graph every 100ms
-                        self.lastReloadTime = curTime
-                        self.BLEViewController?.graph.reloadData()
+                        else{
+                            for i in 0...38{
+                                self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
+                                self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
+                                self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
+                            }
+                            self.BLEViewController?.Ax_plot[39] = fx
+                            self.BLEViewController?.Ay_plot[39] = fy
+                            self.BLEViewController?.Az_plot[39] = fz
+                        }
+                        let curTime = UInt32(CACurrentMediaTime()*1000)
+                        let gap = curTime - self.lastReloadTime
+                        if (gap > self.reloadGap){
+                            //reload graph every 100ms
+                            self.lastReloadTime = curTime
+                            self.BLEViewController?.graph.reloadData()
+                        }
                     }
                 }
-
             }
             else if datavalue?.count == 6{
                 //monitor starting - V6b synchronised monitoring

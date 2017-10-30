@@ -13,7 +13,8 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     @IBOutlet var statusLabel: UILabel!
     @IBOutlet var streamDataLbl: UILabel!
     @IBOutlet var streamBtn: UIButton!
-
+    @IBOutlet var showPlotBtn: UIButton!
+    
     @IBOutlet var graphView: CPTGraphHostingView!
     
     var graph = CPTXYGraph(frame: CGRect.zero)
@@ -28,6 +29,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     //Streaming flag
     private var isStreaming = false
+    public var viewcontrollerShouldShowPlot = false
     var isWaitingForStopStreaming = false
     //graph view data type 0 for acc, 1 for gyro 2 for mag
     var graphViewDataType:Int = 0
@@ -165,6 +167,20 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
             }
         }))
     }
+    
+    
+    @IBAction func showPlotBtnClk(_ sender: Any) {
+    // show plot, disabling will accelerate streaming
+        self.viewcontrollerShouldShowPlot = !self.viewcontrollerShouldShowPlot
+        if(self.viewcontrollerShouldShowPlot){
+            self.showPlotBtn.setTitle("DISABLE PLOT", for: UIControlState.normal)
+        }
+        else{
+            self.showPlotBtn.setTitle("SHOW PLOT", for: UIControlState.normal)
+        }
+    }
+    
+    
     @IBAction func dataSourceBtnClk(_ sender: Any) {
         //change data source of graph view
         let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace

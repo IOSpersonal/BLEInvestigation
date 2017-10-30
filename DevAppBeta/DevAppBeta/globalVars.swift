@@ -14,7 +14,7 @@ struct globalVariables {
     static var allSensorList = [String]()
     static let FileHandler = CustomFileManager()
     //maximum device to pair with
-    static let MaxNumOfDevice = 4
+    static let MaxNumOfDevice = 5
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
     //FW update maximum transfer size
