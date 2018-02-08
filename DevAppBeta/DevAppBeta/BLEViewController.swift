@@ -31,7 +31,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     private var isStreaming = false
     public var viewcontrollerShouldShowPlot = false
     var isWaitingForStopStreaming = false
-    //graph view data type 0 for acc, 1 for gyro 2 for mag
+    //graph view data type 0 for acc, 1 for gyro 2 for mag, 3 for EMG
     var graphViewDataType:Int = 0
 
     override func viewDidLoad() {
@@ -231,6 +231,21 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
                 ]
             }
         }))
+        alert.addAction(UIAlertAction.init(title: "EMG", style: UIAlertActionStyle.default, handler: {
+            (alert: UIAlertAction!) in
+            self.graphViewDataType = 3
+            print("[DEBUG] graph data type set to EMG")
+            plotSpace.globalYRange = nil
+            plotSpace.yRange = CPTPlotRange(location: -1.0, length: 5.0)
+            plotSpace.globalYRange = plotSpace.yRange
+            if let y = axes.yAxis{
+                y.majorIntervalLength = 1.0
+                y.minorTicksPerInterval = 1
+                y.labelExclusionRanges = [
+                    CPTPlotRange(location: -0.01, length: 0.02)
+                ]
+            }
+        }))
         self.present(alert, animated: true, completion: nil)
     }
     
@@ -276,15 +291,13 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         // Dispose of any resources that can be recreated.
     }
     
-    func confirmStreamingState() -> Bool{
+    func confirmStreamingState(){
         if self.isStreaming == false && !self.isWaitingForStopStreaming{
             print("[DEBUG] one or more connected sensor is already streaming!")
             self.isStreaming = true
             self.updateStatus(value: "Streaming")
             self.streamBtn.setTitle("STOP", for: UIControlState.normal)
-            return true
         }
-        return false
     }
     
     @IBAction func startStreamBtnClk(_ sender: Any) {

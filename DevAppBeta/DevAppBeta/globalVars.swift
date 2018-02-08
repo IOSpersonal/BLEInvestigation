@@ -18,6 +18,12 @@ struct globalVariables {
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
     //FW update maximum transfer size
-    static let maxTransferUnit = 19
+    static let maxTransferUnit = 63
     static var currentNumOfDevice = 0
+    //configs
+    static let accFreqArray = ["10Hz","20Hz", "50Hz", "100Hz","200Hz","225Hz"]
+    static let accScaleArray = ["0","2", "4", "8","16"]
+    static let gyroScaleArray = ["0","250", "500","1000","2000","4000"]
+    static let magFreqArray = ["STAND BY", "SINGLE","10Hz","20Hz", "50Hz", "100Hz"]
+    static let emgFreqArray = ["STAND BY","500Hz", "1000Hz"]
 }

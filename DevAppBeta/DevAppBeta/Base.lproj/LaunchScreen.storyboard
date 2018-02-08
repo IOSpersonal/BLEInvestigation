@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina4_0" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
+    <customFonts key="customFonts">
+        <array key="HoeflerText.ttc">
+            <string>HoeflerText-BlackItalic</string>
+        </array>
+    </customFonts>
     <scenes>
         <!--View Controller-->
         <scene sceneID="EHf-IW-A2E">
@@ -23,26 +29,28 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logoSvg" highlightedImage="logoSvg" translatesAutoresizingMaskIntoConstraints="NO" id="LEI-Jz-vb0">
-                                <rect key="frame" x="96" y="37" width="128" height="150"/>
+                                <rect key="frame" x="96" y="37" width="128" height="154"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="LEI-Jz-vb0" secondAttribute="height" multiplier="64:77" id="l4u-dx-Rs9"/>
+                                </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Dev App Beta 1.0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0oW-Gt-cRO">
                                 <rect key="frame" x="36" y="206" width="248" height="30"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="30" id="iqs-9t-NUx"/>
+                                    <constraint firstAttribute="width" secondItem="0oW-Gt-cRO" secondAttribute="height" multiplier="124:15" id="8Xx-zh-5J4"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="HoeflerText-BlackItalic" family="Hoefler Text" pointSize="30"/>
-                                <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
                         <color key="backgroundColor" red="0.92829703957979337" green="1" blue="0.98412130293323863" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstAttribute="trailingMargin" secondItem="LEI-Jz-vb0" secondAttribute="trailing" constant="80" id="7jU-aa-qW6"/>
-                            <constraint firstItem="0oW-Gt-cRO" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leadingMargin" constant="20" id="BgD-FC-b0L"/>
-                            <constraint firstItem="LEI-Jz-vb0" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="17" id="God-LJ-eoa"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="0oW-Gt-cRO" secondAttribute="trailing" constant="20" id="NEN-k7-c0Z"/>
-                            <constraint firstItem="0oW-Gt-cRO" firstAttribute="top" secondItem="LEI-Jz-vb0" secondAttribute="bottom" constant="19" id="Yda-Ue-PRr"/>
-                            <constraint firstItem="LEI-Jz-vb0" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leadingMargin" constant="80" id="yfP-G7-k9A"/>
+                            <constraint firstItem="0oW-Gt-cRO" firstAttribute="top" secondItem="LEI-Jz-vb0" secondAttribute="bottom" constant="15" id="Ohu-Sj-HlU"/>
+                            <constraint firstItem="LEI-Jz-vb0" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="17" id="abF-0R-Rc2"/>
+                            <constraint firstItem="0oW-Gt-cRO" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leadingMargin" constant="20" id="gap-L1-pCb"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="LEI-Jz-vb0" secondAttribute="trailing" constant="80" id="im4-K0-v8L"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="0oW-Gt-cRO" secondAttribute="trailing" constant="20" id="oBF-VI-NmR"/>
+                            <constraint firstItem="LEI-Jz-vb0" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leadingMargin" constant="80" id="tEv-aP-LhN"/>
                         </constraints>
                     </view>
                 </viewController>

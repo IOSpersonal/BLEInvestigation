@@ -95,6 +95,13 @@ class FWUpgradeViewController: UIViewController {
         print("[DEBUG] synchronised monitoring button click event")
         self.present(self.monitorAlert, animated: true, completion: nil)
     }
+    @IBAction func revertBtnClk(_ sender: Any) {
+        print("[DEBUG] revert device button click event")
+        let success = globalVariables.BLEHandler.revertDevices()
+        if success{
+            globalVariables.BLEHandler.disconnectAllPeripheral()
+        }
+    }
     @IBAction func eraseDeviceBtnClk(_ sender: Any) {
         print("[DEBUG] erase device button click event")
         let success = globalVariables.BLEHandler.eraseDevices()

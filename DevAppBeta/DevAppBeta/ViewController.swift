@@ -96,7 +96,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if self.targetDeviceIndices.count > 0 {
             var statusString = "selected: "
             for i in 0...self.targetDeviceIndices.count-1{
-                statusString += globalVariables.allSensorList[self.targetDeviceIndices[i]]
+                let sensorNameWithRssi = globalVariables.allSensorList[self.targetDeviceIndices[i]]
+                let sensorName = String(sensorNameWithRssi[..<sensorNameWithRssi.index(sensorNameWithRssi.startIndex, offsetBy: 8)])
+                statusString += sensorName
                 statusString += " "
                 if i == 1 {
                     statusString += "\n                "

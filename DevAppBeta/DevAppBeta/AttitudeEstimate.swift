@@ -1,5 +1,6 @@
 //
 //  AttitudeEstimate.swift
+//  Using a QUEST Kalman Filter, with magnetometer data excluded
 //  DevAppBeta
 //
 //  Created by Weihang Liu on 21/7/17.
