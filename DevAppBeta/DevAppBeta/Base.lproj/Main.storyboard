@@ -886,20 +886,6 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mwq-OS-zhc" userLabel="bottomView">
                                 <rect key="frame" x="0.0" y="641" width="414" height="95"/>
                                 <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wkX-TS-OuD">
-                                        <rect key="frame" x="8" y="50" width="398" height="37"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="37" id="ojH-sB-U8v"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" name="Arial-BoldMT" family="Arial" pointSize="17"/>
-                                        <state key="normal" title="BACK" backgroundImage="redBtn.png">
-                                            <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="backBtnClk:" destination="Du7-6R-9CC" eventType="touchUpInside" id="kGj-mw-VgY"/>
-                                            <segue destination="BYZ-38-t0r" kind="presentation" identifier="BLEViewToMainView" id="dzh-oj-f4l"/>
-                                        </connections>
-                                    </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YmO-2j-zaB">
                                         <rect key="frame" x="8" y="5" width="195.33333333333334" height="37"/>
                                         <constraints>
@@ -926,25 +912,53 @@
                                             <action selector="showPlotBtnClk:" destination="Du7-6R-9CC" eventType="touchUpInside" id="kC1-4w-33l"/>
                                         </connections>
                                     </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Wwp-uh-HUs">
+                                        <rect key="frame" x="211" y="50" width="195" height="37"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="37" id="SMJ-l5-I5p"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" name="Arial-BoldMT" family="Arial" pointSize="17"/>
+                                        <state key="normal" title="BACK" backgroundImage="redBtn.png">
+                                            <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <connections>
+                                            <segue destination="kgk-1D-Qay" kind="presentation" id="Zgq-nT-Lhf"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wkX-TS-OuD">
+                                        <rect key="frame" x="8" y="50" width="195" height="37"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="37" id="6hQ-tO-Owf"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" name="Arial-BoldMT" family="Arial" pointSize="17"/>
+                                        <state key="normal" title="DISCONNECT" backgroundImage="redBtn.png">
+                                            <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="backBtnClk:" destination="Du7-6R-9CC" eventType="touchUpInside" id="kGj-mw-VgY"/>
+                                            <segue destination="BYZ-38-t0r" kind="presentation" identifier="BLEViewToMainView" id="dzh-oj-f4l"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" red="0.50789043840000003" green="0.81500484500000003" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
-                                    <constraint firstItem="wkX-TS-OuD" firstAttribute="leading" secondItem="mwq-OS-zhc" secondAttribute="leading" constant="8" id="ETw-sF-DiF"/>
+                                    <constraint firstAttribute="trailing" secondItem="Wwp-uh-HUs" secondAttribute="trailing" constant="8" id="531-oE-qFL"/>
+                                    <constraint firstItem="wkX-TS-OuD" firstAttribute="leading" secondItem="mwq-OS-zhc" secondAttribute="leading" constant="8" id="9Lz-Tx-A9J"/>
                                     <constraint firstItem="hvS-NN-O6k" firstAttribute="height" secondItem="YmO-2j-zaB" secondAttribute="height" id="ExD-ea-JpT"/>
                                     <constraint firstAttribute="trailing" secondItem="hvS-NN-O6k" secondAttribute="trailing" constant="8" id="GuP-XS-GnH"/>
-                                    <constraint firstAttribute="trailing" secondItem="wkX-TS-OuD" secondAttribute="trailing" constant="8" id="KJ3-HS-fyg"/>
+                                    <constraint firstItem="Wwp-uh-HUs" firstAttribute="leading" secondItem="wkX-TS-OuD" secondAttribute="trailing" constant="8" id="L74-aI-Sxm"/>
                                     <constraint firstAttribute="height" constant="95" id="MK5-lM-ewi"/>
                                     <constraint firstItem="YmO-2j-zaB" firstAttribute="leading" secondItem="mwq-OS-zhc" secondAttribute="leading" constant="8" id="NN8-KJ-c8U"/>
-                                    <constraint firstItem="wkX-TS-OuD" firstAttribute="top" secondItem="hvS-NN-O6k" secondAttribute="bottom" constant="8" id="ZUc-Hg-OIJ"/>
+                                    <constraint firstItem="wkX-TS-OuD" firstAttribute="top" secondItem="YmO-2j-zaB" secondAttribute="bottom" constant="8" id="a7s-Wh-Zg0"/>
                                     <constraint firstItem="hvS-NN-O6k" firstAttribute="width" secondItem="YmO-2j-zaB" secondAttribute="width" id="abE-y4-33a"/>
                                     <constraint firstAttribute="height" constant="95" id="b49-wt-I3o"/>
                                     <constraint firstAttribute="height" constant="95" id="cET-UX-ufx"/>
-                                    <constraint firstItem="wkX-TS-OuD" firstAttribute="top" secondItem="YmO-2j-zaB" secondAttribute="bottom" constant="8" id="dbK-ba-QWD"/>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="95" id="e3P-8f-3uu"/>
                                     <constraint firstItem="hvS-NN-O6k" firstAttribute="leading" secondItem="YmO-2j-zaB" secondAttribute="trailing" constant="8" id="eEY-RU-5rx"/>
                                     <constraint firstItem="YmO-2j-zaB" firstAttribute="top" secondItem="mwq-OS-zhc" secondAttribute="top" constant="5" id="gWz-dx-vKA"/>
+                                    <constraint firstItem="Wwp-uh-HUs" firstAttribute="width" secondItem="wkX-TS-OuD" secondAttribute="width" id="iJG-Dg-3Ye"/>
                                     <constraint firstItem="hvS-NN-O6k" firstAttribute="top" secondItem="mwq-OS-zhc" secondAttribute="top" constant="5" id="rfh-GE-CVg"/>
-                                    <constraint firstAttribute="bottom" secondItem="wkX-TS-OuD" secondAttribute="bottom" constant="8" id="wr4-WP-pJs"/>
+                                    <constraint firstItem="Wwp-uh-HUs" firstAttribute="top" secondItem="hvS-NN-O6k" secondAttribute="bottom" constant="8" id="sg9-Rq-gSy"/>
                                 </constraints>
                                 <variation key="default">
                                     <mask key="constraints">
@@ -1207,7 +1221,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SfP-2s-I4g" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1796" y="34"/>
+            <point key="canvasLocation" x="1795.6521739130437" y="33.423913043478265"/>
         </scene>
         <!--Func Navi View-->
         <scene sceneID="c7o-uP-KU0">
@@ -1297,7 +1311,7 @@
                                     <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 </state>
                                 <connections>
-                                    <segue destination="Du7-6R-9CC" kind="presentation" id="w51-9l-gd5"/>
+                                    <segue destination="kgk-1D-Qay" kind="presentation" id="7BE-GF-q95"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YGK-I9-qUo">
@@ -1601,8 +1615,8 @@
         <image name="redBtn.png" width="556" height="90"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="TRe-K3-Irn"/>
         <segue reference="4eD-1m-h9L"/>
+        <segue reference="Zgq-nT-Lhf"/>
         <segue reference="dzh-oj-f4l"/>
     </inferredMetricsTieBreakers>
 </document>
