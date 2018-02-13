@@ -118,11 +118,11 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
     
     private func readInitialSelection()
     {
-        self.accFreqPV.selectRow(globalVariables.BLEHandler.acc_gyro_freq[0], inComponent: 0, animated: true)
-        self.accScalePV.selectRow(globalVariables.BLEHandler.accScales[0], inComponent: 0, animated: true)
-        self.gyroScalePV.selectRow(globalVariables.BLEHandler.gyroScales[0], inComponent: 0, animated: true)
-        self.magFreqPV.selectRow(globalVariables.BLEHandler.magFreq[0], inComponent: 0, animated: true)
-        self.emgFreqPV.selectRow(globalVariables.BLEHandler.emgFreq[0], inComponent: 0, animated: true)
+        self.accFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].acc_gyro_freq, inComponent: 0, animated: true)
+        self.accScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].accScales, inComponent: 0, animated: true)
+        self.gyroScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].gyroScales, inComponent: 0, animated: true)
+        self.magFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].magFreq, inComponent: 0, animated: true)
+        self.emgFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].emgFreq, inComponent: 0, animated: true)
     }
     
     override func didReceiveMemoryWarning() {

@@ -99,7 +99,7 @@ class FWUpgradeViewController: UIViewController {
         print("[DEBUG] revert device button click event")
         let success = globalVariables.BLEHandler.revertDevices()
         if success{
-            globalVariables.BLEHandler.disconnectAllPeripheral()
+            _ = globalVariables.BLEHandler.disconnectAllPeripheral()
         }
     }
     @IBAction func eraseDeviceBtnClk(_ sender: Any) {
@@ -127,7 +127,7 @@ class FWUpgradeViewController: UIViewController {
         print("[DEBUG] update FW button click event")
         self.updateFWProgressBar.setProgress(0.0, animated: false)
         self.updateFWProgressPercentageLabel.text = "0%"
-        globalVariables.BLEHandler.startUpdateFWWithFile(filename: "FW_TZ1011_6_5_12279.bin")
+        _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: "FW_TZ1011_6_5_12279.bin")
     }
 
 
