@@ -1382,19 +1382,20 @@
                                     <action selector="stopTimeCalBtnClk:" destination="ObX-De-W3B" eventType="touchUpInside" id="LhM-0G-ZW5"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="0%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R75-AN-hHU">
-                                <rect key="frame" x="352" y="662" width="42" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R75-AN-hHU">
+                                <rect key="frame" x="364" y="229" width="42" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="21" id="lwP-XL-4L4"/>
+                                    <constraint firstAttribute="width" constant="42" id="Gqb-Nz-u0A"/>
+                                    <constraint firstAttribute="height" constant="21" id="efe-IW-xye"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" misplaced="YES" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="hyP-4q-UKq">
-                                <rect key="frame" x="8" y="672" width="334" height="2"/>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="hyP-4q-UKq">
+                                <rect key="frame" x="8" y="237" width="334" height="2"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="2" id="842-Vm-CTo"/>
+                                    <constraint firstAttribute="height" constant="2" id="qid-KE-6Ch"/>
                                 </constraints>
                             </progressView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CWL-c5-oEi">
@@ -1408,32 +1409,52 @@
                                     <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 </state>
                                 <connections>
-                                    <action selector="eraseDeviceBtnClk:" destination="ObX-De-W3B" eventType="touchUpInside" id="tvK-QN-AYW"/>
                                     <action selector="revertBtnClk:" destination="ObX-De-W3B" eventType="touchUpInside" id="GLs-RF-XnO"/>
+                                </connections>
+                            </button>
+                            <sceneKitView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="c3D-oh-1ZB">
+                                <rect key="frame" x="8" y="258" width="398" height="249"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="249" id="md4-hX-Qai"/>
+                                </constraints>
+                            </sceneKitView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CtX-jt-Uxx">
+                                <rect key="frame" x="8" y="515" width="398" height="37"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="37" id="y1R-NU-s3e"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Arial-BoldMT" family="Arial" pointSize="17"/>
+                                <state key="normal" title="Enable Attitude Estimate" backgroundImage="redBtn.png">
+                                    <color key="titleColor" red="0.96572046199999995" green="1" blue="0.12924023879999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="AttitudeEstimationBtnClk:" destination="ObX-De-W3B" eventType="touchUpInside" id="XEx-9W-fa0"/>
                                 </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" red="0.50789043840000003" green="0.81500484500000003" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="R75-AN-hHU" firstAttribute="top" secondItem="CWL-c5-oEi" secondAttribute="bottom" constant="8" id="2CT-oy-m5v"/>
                             <constraint firstItem="PKx-dS-HEe" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="2vd-sq-4cq"/>
+                            <constraint firstAttribute="trailing" secondItem="R75-AN-hHU" secondAttribute="trailing" constant="8" id="4Bz-N1-28r"/>
                             <constraint firstAttribute="trailing" secondItem="YGK-I9-qUo" secondAttribute="trailing" constant="8" id="5Ew-Nb-KNs"/>
-                            <constraint firstItem="R75-AN-hHU" firstAttribute="top" secondItem="Vq3-jt-M4s" secondAttribute="bottom" constant="6" id="AQe-e3-uFN"/>
+                            <constraint firstItem="hyP-4q-UKq" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="7P5-MV-ezo"/>
+                            <constraint firstItem="c3D-oh-1ZB" firstAttribute="top" secondItem="R75-AN-hHU" secondAttribute="bottom" constant="8" id="9wC-I5-gje"/>
                             <constraint firstItem="CWL-c5-oEi" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="Av9-RF-sXx"/>
-                            <constraint firstItem="hyP-4q-UKq" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="Cen-hx-9hY"/>
-                            <constraint firstItem="hyP-4q-UKq" firstAttribute="top" secondItem="Vq3-jt-M4s" secondAttribute="bottom" constant="15" id="Hc4-Dp-7gc"/>
-                            <constraint firstAttribute="trailing" secondItem="hyP-4q-UKq" secondAttribute="trailing" constant="72" id="JR3-Tl-Jxw"/>
                             <constraint firstItem="Rh3-Rb-1Jo" firstAttribute="width" secondItem="h4h-Hx-vRi" secondAttribute="width" id="Kag-mW-cc1"/>
                             <constraint firstItem="Rh3-Rb-1Jo" firstAttribute="leading" secondItem="h4h-Hx-vRi" secondAttribute="trailing" constant="8" id="KeK-eF-w6t"/>
+                            <constraint firstItem="CtX-jt-Uxx" firstAttribute="top" secondItem="c3D-oh-1ZB" secondAttribute="bottom" constant="8" id="MEF-Jc-zqz"/>
                             <constraint firstItem="Vq3-jt-M4s" firstAttribute="top" secondItem="Rh3-Rb-1Jo" secondAttribute="bottom" constant="8" id="MSO-n7-PnW"/>
                             <constraint firstItem="Vq3-jt-M4s" firstAttribute="width" secondItem="PKx-dS-HEe" secondAttribute="width" id="Omo-Kr-PAa"/>
+                            <constraint firstItem="CtX-jt-Uxx" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="PoR-og-n8I"/>
                             <constraint firstItem="Vq3-jt-M4s" firstAttribute="leading" secondItem="PKx-dS-HEe" secondAttribute="trailing" constant="8" id="U4l-DT-5md"/>
                             <constraint firstItem="Vq3-jt-M4s" firstAttribute="width" secondItem="PKx-dS-HEe" secondAttribute="width" id="U7c-KU-Cwp"/>
+                            <constraint firstAttribute="trailing" secondItem="c3D-oh-1ZB" secondAttribute="trailing" constant="8" id="Ufa-1B-X3M"/>
                             <constraint firstAttribute="trailing" secondItem="23w-eY-7Kz" secondAttribute="trailing" id="VAV-G9-ptV"/>
                             <constraint firstAttribute="trailing" secondItem="N7S-5h-zo0" secondAttribute="trailing" constant="8" id="Vff-RD-DW0"/>
                             <constraint firstItem="h4h-Hx-vRi" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="bVz-rc-UvE"/>
                             <constraint firstAttribute="trailing" secondItem="Rh3-Rb-1Jo" secondAttribute="trailing" constant="8" id="bu8-LK-Gxd"/>
                             <constraint firstItem="Rh3-Rb-1Jo" firstAttribute="top" secondItem="YGK-I9-qUo" secondAttribute="bottom" constant="8" id="bzg-I8-xlD"/>
-                            <constraint firstItem="R75-AN-hHU" firstAttribute="trailing" secondItem="cbK-Ed-OeQ" secondAttribute="trailingMargin" id="c9Y-5l-CLO"/>
                             <constraint firstItem="YGK-I9-qUo" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="dvK-Gz-7RC"/>
                             <constraint firstItem="CWL-c5-oEi" firstAttribute="top" secondItem="PKx-dS-HEe" secondAttribute="bottom" constant="8" id="e2T-Kj-l65"/>
                             <constraint firstItem="YGK-I9-qUo" firstAttribute="top" secondItem="23w-eY-7Kz" secondAttribute="bottom" constant="8" id="fn5-SL-MG5"/>
@@ -1441,13 +1462,19 @@
                             <constraint firstAttribute="trailing" secondItem="CWL-c5-oEi" secondAttribute="trailing" constant="8" id="iUy-Ko-pto"/>
                             <constraint firstItem="PKx-dS-HEe" firstAttribute="top" secondItem="h4h-Hx-vRi" secondAttribute="bottom" constant="8" id="lQa-hj-qrq"/>
                             <constraint firstItem="N7S-5h-zo0" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="mPY-kX-XkT"/>
+                            <constraint firstItem="hyP-4q-UKq" firstAttribute="top" secondItem="CWL-c5-oEi" secondAttribute="bottom" constant="16" id="n3D-Ca-BWA"/>
+                            <constraint firstItem="c3D-oh-1ZB" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" constant="8" id="nku-bP-dgV"/>
+                            <constraint firstAttribute="trailing" secondItem="hyP-4q-UKq" secondAttribute="trailing" constant="72" id="oZt-s3-sAi"/>
                             <constraint firstItem="E4A-Zd-Qwi" firstAttribute="top" secondItem="N7S-5h-zo0" secondAttribute="bottom" constant="8" id="oeI-To-KI3"/>
+                            <constraint firstAttribute="trailing" secondItem="CtX-jt-Uxx" secondAttribute="trailing" constant="8" id="pAA-j6-ZLO"/>
                             <constraint firstItem="23w-eY-7Kz" firstAttribute="leading" secondItem="cbK-Ed-OeQ" secondAttribute="leading" id="pGt-hd-Cqa"/>
                             <constraint firstAttribute="trailing" secondItem="Vq3-jt-M4s" secondAttribute="trailing" constant="8" id="toz-Mp-3Do"/>
                             <constraint firstItem="h4h-Hx-vRi" firstAttribute="top" secondItem="YGK-I9-qUo" secondAttribute="bottom" constant="8" id="vJO-YJ-PHX"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="AEBtn" destination="CtX-jt-Uxx" id="62U-hA-KNu"/>
+                        <outlet property="AESceneView" destination="c3D-oh-1ZB" id="8hF-ww-eki"/>
                         <outlet property="startTimeCalBtn" destination="PKx-dS-HEe" id="oMA-Sf-WEM"/>
                         <outlet property="statusLabel" destination="23w-eY-7Kz" id="Nfg-Ut-b7u"/>
                         <outlet property="stopTimeCalBtn" destination="Vq3-jt-M4s" id="w5P-q2-YaP"/>
@@ -1615,8 +1642,7 @@
         <image name="redBtn.png" width="556" height="90"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="4eD-1m-h9L"/>
-        <segue reference="Zgq-nT-Lhf"/>
-        <segue reference="dzh-oj-f4l"/>
+        <segue reference="7BE-GF-q95"/>
+        <segue reference="dWT-hh-tCA"/>
     </inferredMetricsTieBreakers>
 </document>

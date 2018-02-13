@@ -17,6 +17,7 @@ struct globalVariables {
     static let MaxNumOfDevice = 5
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
+    static var EKFshouldPerformAttitudeEstimate = false
     //FW update maximum transfer size
     static let maxTransferUnit = 63
     static var currentNumOfDevice = 0

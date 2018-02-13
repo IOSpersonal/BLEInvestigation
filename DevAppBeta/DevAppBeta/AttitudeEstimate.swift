@@ -100,6 +100,21 @@ class AttitudeEstimator: NSObject {
         }
         return inMatrix
     }
+    func threeAxisRot(vec: [Double]) -> [Double]{
+        let r1 = atan2(vec[0],vec[1])
+        let r2 = asin(vec[2])
+        let r3 = atan2(vec[3],vec[4])
+        return [r1,r2,r3]
+    }
+    
+    func quat2euler(quat: [Double])->[Double]{
+        let val1 = -2 * quat[2] * quat[3] - quat[0] * quat[1]
+        let val2 = quat[0]^^2 - quat[1]^^2 - quat[2]^^2 + quat[3]^^2
+        let val3 = 2 * (quat[1] * quat[3] + quat[0] * quat[2])
+        let val4 = -2 * (quat[1] * quat[2] - quat[0] * quat[3])
+        let val5 = quat[0]^^2 + quat[1]^^2 - quat[2]^^2 + quat[3]^^2
+        return threeAxisRot(vec:[val1, val2, val3, val4, val5])
+    }
     
     func EKFProcessStepWithData(accx: Double, accy: Double, accz: Double, gyrox: Double, gyroy: Double, gyroz: Double, deltaT: Double) -> [Double]{
         //perform an attitude estimation step

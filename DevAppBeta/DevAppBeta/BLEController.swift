@@ -582,10 +582,11 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         else if characteristic.uuid.uuidString == FWUPDATE_CONTROL_POINT_UUID {
             if sensor.FWUpgradeCompleted{
-                print("[DEBUG] end of FWUpgrade, write descriptor")
+                print("[DEBUG] end of FWUpgrade")
+                /* skip write descriptor for avoid crash
                 let desc = CBMutableDescriptor.init(type: CBUUID.init(string: FWUPDATE_CCC_DESC_UUID), value: nil)
                 let cmd = Data.init(bytes: [0x01])
-                sensor.peripheralRef.writeValue(cmd, for: desc)
+                sensor.peripheralRef.writeValue(cmd, for: desc)*/
             }
             else{
                 /*
@@ -638,6 +639,9 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             else {
                 let packet_array = [UInt8(sensor.upCounters)] + FWBuf[sensor.FWWriteCounter...sensor.FWWriteCounter + globalVariables.maxTransferUnit - 1]
                 let packet = Data.init(bytes: packet_array)
+                let percentageValue = Float(sensor.FWWriteCounter/self.FWBuf.count)
+                self.FWUpgradeViewController?.updateFWProgressBar.setProgress(percentageValue, animated: true)
+                self.FWUpgradeViewController?.updateFWProgressPercentageLabel.text = String(Int(percentageValue)) + "%"
                 print("[DEBUG] FWUpgradeStep: \(sensor.FWWriteCounter)/\(self.FWBuf.count), upCounter: \(sensor.upCounters), length: \(packet.count)")
                 peripheral.writeValue(packet, for: characteristic, type: .withResponse)
                 sensor.upCounters += 1
@@ -672,79 +676,82 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             if characteristic.value != nil{
                 let charValue = [UInt8](characteristic.value!)
                 print("[DEBUG] accelerometer scale read success, value = \(charValue[3]), mag freq \(charValue[2])")
-                switch charValue[0] {
-                case 4:
-                    sensor.acc_gyro_freq = 5
-                    break
-                case 5:
-                    sensor.acc_gyro_freq = 4
-                    break
-                case 10:
-                    sensor.acc_gyro_freq = 3
-                    break
-                case 21:
-                    sensor.acc_gyro_freq = 2
-                    break
-                case 55:
-                    sensor.acc_gyro_freq = 1
-                    break
-                case 111:
-                    sensor.acc_gyro_freq = 0
-                    break
-                default:
-                    break
+                if charValue.count >= 8{
+                    switch charValue[0] {
+                    case 4:
+                        sensor.acc_gyro_freq = 5
+                        break
+                    case 5:
+                        sensor.acc_gyro_freq = 4
+                        break
+                    case 10:
+                        sensor.acc_gyro_freq = 3
+                        break
+                    case 21:
+                        sensor.acc_gyro_freq = 2
+                        break
+                    case 55:
+                        sensor.acc_gyro_freq = 1
+                        break
+                    case 111:
+                        sensor.acc_gyro_freq = 0
+                        break
+                    default:
+                        break
+                    }
+                    switch charValue[1] {
+                    case 1:
+                        sensor.magFreq = 0
+                        break
+                    case 2:
+                        sensor.magFreq = 1
+                        break
+                    case 4:
+                        sensor.magFreq = 2
+                        break
+                    case 8:
+                        sensor.magFreq = 3
+                        break
+                    case 12:
+                        sensor.magFreq = 4
+                        break
+                    case 16:
+                        sensor.magFreq = 5
+                        break
+                    default:
+                        break
+                    }
+                    switch charValue[3] {
+                    case 1:
+                        sensor.accScales = 1
+                        break
+                    case 2:
+                        sensor.accScales = 2
+                        break
+                    case 3:
+                        sensor.accScales = 3
+                        break
+                    case 4:
+                        sensor.accScales = 4
+                        break
+                    default:
+                        break
+                    }
+                    switch charValue[7] {
+                    case 1:
+                        sensor.emgFreq = 1
+                        break
+                    case 2:
+                        sensor.emgFreq = 2
+                        break
+                    case 0:
+                        sensor.emgFreq = 0
+                        break
+                    default:
+                        break
+                    }
                 }
-                switch charValue[1] {
-                case 1:
-                    sensor.magFreq = 0
-                    break
-                case 2:
-                    sensor.magFreq = 1
-                    break
-                case 4:
-                    sensor.magFreq = 2
-                    break
-                case 8:
-                    sensor.magFreq = 3
-                    break
-                case 12:
-                    sensor.magFreq = 4
-                    break
-                case 16:
-                    sensor.magFreq = 5
-                    break
-                default:
-                    break
-                }
-                switch charValue[3] {
-                case 1:
-                    sensor.accScales = 1
-                    break
-                case 2:
-                    sensor.accScales = 2
-                    break
-                case 3:
-                    sensor.accScales = 3
-                    break
-                case 4:
-                    sensor.accScales = 4
-                    break
-                default:
-                    break
-                }
-                switch charValue[7] {
-                case 1:
-                    sensor.emgFreq = 1
-                    break
-                case 2:
-                    sensor.emgFreq = 2
-                    break
-                case 0:
-                    sensor.emgFreq = 0
-                    break
-                default:
-                    break
-                }
+                
             }
         }}catch{return}
     }
@@ -869,7 +876,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         do{let sensor = try getSensorByName(name: peripheral.name!)
         let datavalue = characteristic.value
         print("[DEBUG] streamed data length: \(datavalue?.count ?? 0)")
-        if ((datavalue?.count == 23 || datavalue?.count == 18) && self.BLEViewController != nil){
+        if ((datavalue?.count == 23 || datavalue?.count == 20) && self.BLEViewController != nil){
             //normal streaming
             //prompt for confirm streaming status on BLEViewController
             self.BLEViewController?.confirmStreamingState()
@@ -884,7 +891,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 //process and plot
                 let sensorData = [UInt8](datavalue!)
                 
-                let offset = 2
+                let offset = 0 //2 for v6c
                 //Process ACC
                 let Ax = UInt16(sensorData[1+offset]) << 8 | UInt16(sensorData[0+offset])
                 let Ax_signed:Int16 = Int16(bitPattern: Ax)
@@ -926,7 +933,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     fmz = Double(Mz_signed)
                     //print("[DEBUG] streaming magnetometer value: \(fmx) \(fmy) \(fmz)")
                 }
-                else{
+                else if(sensorData.count == 14+offset+1){
                     //Process EMG
                     let EMG = UInt32(sensorData[14+offset]) << 16 | UInt32(sensorData[13+offset]) << 8 | UInt32(sensorData[12+offset])
                     let EMG_signed:Int32 = Int32(bitPattern: EMG)
@@ -934,17 +941,19 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     print("[DEBUG] streaming EMG value: \(femg)")
                 }
                 //Perform attitude estimate
-                /*
-                if false{
+                
+                if globalVariables.EKFshouldPerformAttitudeEstimate{
                     let deltaT = (CACurrentMediaTime() - self.lastStreamingTime)
                     self.lastStreamingTime = CACurrentMediaTime()
-                    let time1 = CACurrentMediaTime()
+                    //let time1 = CACurrentMediaTime()
                     let q = self.attitudeEstimator?.EKFProcessStepWithData(accx: fax, accy: fay, accz: faz, gyrox: fgx, gyroy: fgy, gyroz: fgz, deltaT: deltaT)
-                    //print("[Attitude Estimate] \(q) deltaT: \(deltaT)")
-                    let duration = CACurrentMediaTime() - time1
+                    let euler = self.attitudeEstimator?.quat2euler(quat:q!)
+                    print("[Attitude Estimate] \(q ?? [1.0, 0.0, 0.0, 0.0]) deltaT: \(deltaT),euler: \(euler ?? [0.0, 0.0, 0.0])")
+                    self.FWUpgradeViewController?.updateSceneWithQuat(Quat:q!)
+                    //let duration = CACurrentMediaTime() - time1
                     //print("[TEMPDEBUG] timeElapsed: \(duration * 1000) ms")
                 }
-                */
+                
                 //check data source type
                 var fx:Double
                 var fy:Double

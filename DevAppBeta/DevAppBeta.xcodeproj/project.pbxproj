@@ -10,6 +10,7 @@
 		4AE8BB656B61C79213EBBD43 /* Pods_DevAppBetaUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F34DE1F7781D3812224C56C5 /* Pods_DevAppBetaUITests.framework */; };
 		6C426B9ADAA48543A7E57EC4 /* Pods_DevAppBetaTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01526D908663F5C2E42A3A97 /* Pods_DevAppBetaTests.framework */; };
 		9F11A00720315A58009F9845 /* dsvSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F11A00620315A58009F9845 /* dsvSensor.swift */; };
+		9F11A0092032A202009F9845 /* PrimitivesScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F11A0082032A202009F9845 /* PrimitivesScene.swift */; };
 		9F27F24F1FA2E4F100E81F58 /* BLEFuncNaviView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F27F24E1FA2E4F100E81F58 /* BLEFuncNaviView.swift */; };
 		9F504D261F99BAB5002BDBD3 /* crc32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F504D251F99BAB5002BDBD3 /* crc32.swift */; };
 		9F6A2E391F271114003D9E4C /* globalVars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A2E381F271114003D9E4C /* globalVars.swift */; };
@@ -57,6 +58,7 @@
 		2511AB968CC8A3415669CDA8 /* Pods_DevAppBeta.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DevAppBeta.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D0B3FF74B959B8A98FDE933 /* Pods-DevAppBetaUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DevAppBetaUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DevAppBetaUITests/Pods-DevAppBetaUITests.release.xcconfig"; sourceTree = "<group>"; };
 		9F11A00620315A58009F9845 /* dsvSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dsvSensor.swift; sourceTree = "<group>"; };
+		9F11A0082032A202009F9845 /* PrimitivesScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimitivesScene.swift; sourceTree = "<group>"; };
 		9F27F24E1FA2E4F100E81F58 /* BLEFuncNaviView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEFuncNaviView.swift; sourceTree = "<group>"; };
 		9F504D251F99BAB5002BDBD3 /* crc32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = crc32.swift; sourceTree = "<group>"; };
 		9F6A2E381F271114003D9E4C /* globalVars.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = globalVars.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 				9FCA101C1F21C44900F37C51 /* AppDelegate.swift */,
 				9F11A00620315A58009F9845 /* dsvSensor.swift */,
 				9FCA104A1F21C47200F37C51 /* BLEViewController.swift */,
+				9F11A0082032A202009F9845 /* PrimitivesScene.swift */,
 				9FCA101E1F21C44900F37C51 /* ViewController.swift */,
 				9F8830421F56961600A678CE /* FWUpgradeViewController.swift */,
 				9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */,
@@ -515,6 +518,7 @@
 				9F96F993202BD38B00D8A804 /* BLEConfigViewController.swift in Sources */,
 				9FCA104B1F21C47200F37C51 /* BLEViewController.swift in Sources */,
 				9FCA104D1F21C4F400F37C51 /* BLEController.swift in Sources */,
+				9F11A0092032A202009F9845 /* PrimitivesScene.swift in Sources */,
 				9F6A2E391F271114003D9E4C /* globalVars.swift in Sources */,
 				9F6A2E3B1F2841E5003D9E4C /* CustomFileManager.swift in Sources */,
 				9F11A00720315A58009F9845 /* dsvSensor.swift in Sources */,

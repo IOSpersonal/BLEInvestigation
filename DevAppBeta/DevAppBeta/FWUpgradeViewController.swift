@@ -7,15 +7,19 @@
 //
 
 import UIKit
+import SceneKit
 
 class FWUpgradeViewController: UIViewController {
 
+    @IBOutlet var AEBtn: UIButton!
+    @IBOutlet var AESceneView: SCNView!
     @IBOutlet var updateFWProgressPercentageLabel: UILabel!
     @IBOutlet var updateFWProgressBar: UIProgressView!
     @IBOutlet var stopTimeCalBtn: UIButton!
     @IBOutlet var startTimeCalBtn: UIButton!
     @IBOutlet var statusLabel: UILabel!
     private var isInitialsed = false
+    private var boxscene = PrimitivesScene()
     private let monitorAlert = UIAlertController(title: "Synchronised Monitoring", message: "\nInput a monitor time in minutes (1-4320). \nsynchronised monitoring current supports two sensors only", preferredStyle: UIAlertControllerStyle.alert)
     private let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
     
@@ -26,8 +30,8 @@ class FWUpgradeViewController: UIViewController {
             self.isInitialsed = true
         }
         // Do any additional setup after loading the view.
-        self.stopTimeCalBtn.isEnabled = true
-        self.startTimeCalBtn.isEnabled = true
+        self.stopTimeCalBtn.isEnabled = false
+        self.startTimeCalBtn.isEnabled = false
     }
     func configurationTextField(textField: UITextField!)
     {
@@ -37,6 +41,12 @@ class FWUpgradeViewController: UIViewController {
     
     func initialiseFWUpgradeViewController(){
         //do this after there is default files available
+        //setup scene
+        self.AESceneView.scene = boxscene
+        self.AESceneView.backgroundColor = UIColor.black
+        self.AESceneView.autoenablesDefaultLighting = true
+        self.AESceneView.allowsCameraControl = true
+        //setup FWUpgrade
         globalVariables.FileHandler.copyDefaultFile()
         self.updateFWProgressBar.setProgress(0.0, animated: false)
         globalVariables.BLEHandler.passFWUpgradeView(view: self)
@@ -69,6 +79,7 @@ class FWUpgradeViewController: UIViewController {
 
     }
 
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -89,6 +100,10 @@ class FWUpgradeViewController: UIViewController {
         let monitorSuccessAlert = UIAlertController(title: "started monitoring", message: message, preferredStyle: UIAlertControllerStyle.alert)
         monitorSuccessAlert.addAction(self.voidAction)
         self.present(monitorSuccessAlert, animated: false, completion: nil)
+    }
+    
+    func updateSceneWithQuat(Quat: [Double]){
+        self.boxscene.rotateNodeWithQuat(quat: Quat)
     }
     
     @IBAction func syncMonitorBtnClk(_ sender: Any) {
@@ -127,8 +142,17 @@ class FWUpgradeViewController: UIViewController {
         print("[DEBUG] update FW button click event")
         self.updateFWProgressBar.setProgress(0.0, animated: false)
         self.updateFWProgressPercentageLabel.text = "0%"
-        _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: "FW_TZ1011_6_5_12279.bin")
+        _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: "FW6c.2.12602_MDM6c.3.bin")
     }
-
-
+    @IBAction func AttitudeEstimationBtnClk(_ sender: Any) {
+        if globalVariables.EKFshouldPerformAttitudeEstimate{
+            globalVariables.EKFshouldPerformAttitudeEstimate = false
+            self.AEBtn.setTitle("Enable Attitude Estimate", for: .normal)
+        }
+        else{
+            globalVariables.EKFshouldPerformAttitudeEstimate = true
+            self.AEBtn.setTitle("Disable Attitude Estimate", for: .normal)
+        }
+    }
+    
 }
