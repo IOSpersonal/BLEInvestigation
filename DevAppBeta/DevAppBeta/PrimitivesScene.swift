@@ -26,10 +26,10 @@ class PrimitivesScene: SCNScene {
     func rotateNodeWithQuat(quat:[Double]){
         let w = quat[0]
         let x = quat[1]
-        let y = quat[2]
-        let z = quat[3]
-        let vec4 = SCNVector4.init(x, y, z, w)
-        self.boxNode.rotation = vec4
+        let z = -quat[2]
+        let y = quat[3]
+        let quatadapt = SCNQuaternion(x,y,z,w)
+        self.boxNode.orientation = quatadapt
     }
     
     required init?(coder aDecoder: NSCoder) {
