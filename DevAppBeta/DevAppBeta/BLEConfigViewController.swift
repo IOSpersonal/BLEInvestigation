@@ -18,24 +18,27 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
     private var initialsed = false
     private var acc_gyro_freq_cmdArr:[UInt8] = [0x6F, 0x37, 0x15, 0x0A, 0x05, 0x04]
     private var mag_freq_cmdArr:[UInt8] = [0x01, 0x02, 0x04, 0x08, 0x0C, 0x10]
+    private var acc_Scale_cmdArr:[UInt8] = [0x00, 0x01, 0x02, 0x03, 0x04]
+    private var gyro_Scale_cmdArr:[UInt8] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05]
+    private var emg_freq_cmdArr:[UInt8] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
     private let voidAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil)
     
     @IBAction func applyConfigBtnClk(_ sender: Any) {
-        let acc_gyro_freq_cmd = self.acc_gyro_freq_cmdArr[self.accScalePV.selectedRow(inComponent: 0)]
+        print("[TEMPDEBUG]\(self.accScalePV.selectedRow(inComponent: 0))")
+        let acc_gyro_freq_cmd = self.acc_gyro_freq_cmdArr[self.accFreqPV.selectedRow(inComponent: 0)]
         let magFreq_cmd = self.mag_freq_cmdArr[self.magFreqPV.selectedRow(inComponent: 0)]
-        let accScale_cmd = UInt8(self.accScalePV.selectedRow(inComponent: 0))
-        let gyroScale_cmd = UInt8(self.gyroScalePV.selectedRow(inComponent: 0))
-        let emgFreq_cmd = UInt8(self.emgFreqPV.selectedRow(inComponent: 0))
+        let accScale_cmd = self.acc_Scale_cmdArr[self.accScalePV.selectedRow(inComponent: 0)]
+        let gyroScale_cmd = self.gyro_Scale_cmdArr[self.gyroScalePV.selectedRow(inComponent: 0)]
+        let emgFreq_cmd = self.emg_freq_cmdArr[self.emgFreqPV.selectedRow(inComponent: 0)]
         let data = Data(bytes: [acc_gyro_freq_cmd,magFreq_cmd,0x01,accScale_cmd,gyroScale_cmd,0x00,0x00,emgFreq_cmd])
-        //print("[TEMP] \(magFreq_cmd),\(self.magFreqPV.selectedRow(inComponent: 0))")
         let success = globalVariables.BLEHandler.writeBLEConfigWithData(data:data)
         var message = "failed"
         if(success){
             message = "success"
         }
-        let monitorSuccessAlert = UIAlertController(title: "apply config", message: message, preferredStyle: UIAlertControllerStyle.alert)
-        monitorSuccessAlert.addAction(self.voidAction)
-        self.present(monitorSuccessAlert, animated: false, completion: nil)
+        let applyConfigAlert = UIAlertController(title: "apply config", message: message, preferredStyle: UIAlertControllerStyle.alert)
+        applyConfigAlert.addAction(self.voidAction)
+        self.present(applyConfigAlert, animated: false, completion: nil)
     }
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -95,8 +98,13 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
         if(!self.initialsed){
             self.initisalise()
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        print("[DEBUG] config view appear event")
         self.readInitialSelection()
     }
+    
     private func initisalise(){
         self.accFreqPV.tag = 0;
         self.accScalePV.tag = 1;
@@ -118,6 +126,7 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
     
     private func readInitialSelection()
     {
+        print("[DEBUG] readInitialSelection called")
         self.accFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].acc_gyro_freq, inComponent: 0, animated: true)
         self.accScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].accScales, inComponent: 0, animated: true)
         self.gyroScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].gyroScales, inComponent: 0, animated: true)

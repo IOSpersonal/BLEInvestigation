@@ -26,5 +26,5 @@ struct globalVariables {
     static let accScaleArray = ["0","2", "4", "8","16"]
     static let gyroScaleArray = ["0","250", "500","1000","2000","4000"]
     static let magFreqArray = ["STAND BY", "SINGLE","10Hz","20Hz", "50Hz", "100Hz"]
-    static let emgFreqArray = ["STAND BY","500Hz", "1000Hz"]
+    static let emgFreqArray = ["STAND BY","1000Hz", "500Hz"]
 }

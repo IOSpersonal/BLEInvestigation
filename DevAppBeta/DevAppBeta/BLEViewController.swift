@@ -352,6 +352,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     @IBAction func compressedDataOffloadBtnClk(_ sender: Any) {
+        print("[DEBUG] compress data offload btn clicked")
         globalVariables.BLEHandler.offloadCompressedData()
         self.updateStatus(value: "offloading")
         self.present(offloadAlert, animated: false, completion: nil)

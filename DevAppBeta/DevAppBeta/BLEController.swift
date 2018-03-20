@@ -283,13 +283,19 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
     
     func offloadCompressedData(){
+        print("[DEBUG] BLEController start offload for \(self.connectedSensors.count) sensors")
         self.timeOffloadStarted = CACurrentMediaTime()
         for sensor in self.connectedSensors{
             sensor.initOffload()
             let data = Data(bytes: [0x06])
-            guard let char = sensor.characteristics[MDM_OFFLOAD_UUID] else {return}
+            guard let char = sensor.characteristics[MDM_OFFLOAD_UUID] else
+            {
+                print("[ERROR] uuid not found")
+                return
+            }
+            print("[DEBUG] start offloading for \(sensor.name)")
             sensor.peripheralRef.writeValue(data, for: char, type: .withResponse)
-            print("[DEBUG] start offloading")
+            
         }
     }
     
@@ -675,7 +681,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         else if characteristic.uuid.uuidString == MDM_SCALE_UUID {
             if characteristic.value != nil{
                 let charValue = [UInt8](characteristic.value!)
-                print("[DEBUG] accelerometer scale read success, value = \(charValue[3]), mag freq \(charValue[2])")
+                print("[DEBUG] accelerometer scale read success, value = \(charValue[3]), mag freq \(charValue[2]), acc freq: \(charValue[0])")
                 if charValue.count >= 8{
                     switch charValue[0] {
                     case 4:
@@ -895,25 +901,25 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 //Process ACC
                 let Ax = UInt16(sensorData[1+offset]) << 8 | UInt16(sensorData[0+offset])
                 let Ax_signed:Int16 = Int16(bitPattern: Ax)
-                let fax = Double(Ax_signed) / 8192.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
+                let fax = Double(Ax_signed) / 32768.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
                 let Ay = UInt16(sensorData[3+offset]) << 8 | UInt16(sensorData[2+offset])
                 let Ay_signed:Int16 = Int16(bitPattern: Ay)
-                let fay = Double(Ay_signed) / 8192.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
+                let fay = Double(Ay_signed) / 32768.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
                 let Az = UInt16(sensorData[5+offset]) << 8 | UInt16(sensorData[4+offset])
                 let Az_signed:Int16 = Int16(bitPattern: Az)
-                let faz = Double(Az_signed) / 8192.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
+                let faz = Double(Az_signed) / 32768.0 * Double(globalVariables.accScaleArray[sensor.accScales])!
                 //print("[DEBUG] streaming accelerometer value: \(fax) \(fay) \(faz)")
                 
                 //Process GYRO
                 let Gx = UInt16(sensorData[7+offset]) << 8 | UInt16(sensorData[6+offset])
                 let Gx_signed:Int16 = Int16(bitPattern: Gx)
-                let fgx = Double(Gx_signed) * 0.00762939453125
+                let fgx = Double(Gx_signed)/32768.0 * Double(globalVariables.gyroScaleArray[sensor.gyroScales])!
                 let Gy = UInt16(sensorData[9+offset]) << 8 | UInt16(sensorData[8+offset])
                 let Gy_signed:Int16 = Int16(bitPattern: Gy)
-                let fgy = Double(Gy_signed) * 0.00762939453125
+                let fgy = Double(Gy_signed)/32768.0 * Double(globalVariables.gyroScaleArray[sensor.gyroScales])!
                 let Gz = UInt16(sensorData[11+offset]) << 8 | UInt16(sensorData[10+offset])
                 let Gz_signed:Int16 = Int16(bitPattern: Gz)
-                let fgz = Double(Gz_signed) * 0.00762939453125
+                let fgz = Double(Gz_signed)/32768.0 * Double(globalVariables.gyroScaleArray[sensor.gyroScales])!
                 //print("[DEBUG] streaming gyroscope value: \(fgx) \(fgy) \(fgz)")
                 
                 //Process MAG

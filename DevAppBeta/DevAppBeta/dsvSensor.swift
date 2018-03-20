@@ -56,7 +56,6 @@ class dsvSensor: NSObject {
         self.isOffloadCompleted = false
         self.lostSeqNums = [UInt16]()
         self.fetchIndices = 0
-        self.characteristics = [:]
 
     }
     
