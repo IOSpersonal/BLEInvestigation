@@ -635,8 +635,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 else{
                     print("[DEBUG] sending last byte")
                     self.FWUpgradeViewController?.updateFWProgressPercentageLabel.text = "100%"
-                    var packet_array = Array.init(repeating: UInt8(0), count: globalVariables.maxTransferUnit + 1)
                     let len = FWBuf.count - sensor.FWWriteCounter
+                    var packet_array = Array.init(repeating: UInt8(0), count: len+1)
                     packet_array[0] = UInt8(sensor.upCounters)
                     packet_array[1...len] = FWBuf[sensor.FWWriteCounter...FWBuf.count - 1]
                     let packet = Data.init(bytes: packet_array)
