@@ -12,11 +12,12 @@
 		9F11A00720315A58009F9845 /* dsvSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F11A00620315A58009F9845 /* dsvSensor.swift */; };
 		9F11A0092032A202009F9845 /* PrimitivesScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F11A0082032A202009F9845 /* PrimitivesScene.swift */; };
 		9F27F24F1FA2E4F100E81F58 /* BLEFuncNaviView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F27F24E1FA2E4F100E81F58 /* BLEFuncNaviView.swift */; };
-		9F504D261F99BAB5002BDBD3 /* crc32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F504D251F99BAB5002BDBD3 /* crc32.swift */; };
 		9F6A2E391F271114003D9E4C /* globalVars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A2E381F271114003D9E4C /* globalVars.swift */; };
 		9F6A2E3B1F2841E5003D9E4C /* CustomFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */; };
 		9F8830431F56961600A678CE /* FWUpgradeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8830421F56961600A678CE /* FWUpgradeViewController.swift */; };
 		9F8830471F60BDA700A678CE /* firmware in Resources */ = {isa = PBXBuildFile; fileRef = 9F8830461F60BDA700A678CE /* firmware */; };
+		9F9288FC2060BF4900B42F4D /* CryptoSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9288F72060BE1900B42F4D /* CryptoSwift.framework */; };
+		9F9288FD2060BF4900B42F4D /* CryptoSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9288F72060BE1900B42F4D /* CryptoSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F96F993202BD38B00D8A804 /* BLEConfigViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F96F992202BD38B00D8A804 /* BLEConfigViewController.swift */; };
 		9F9B79D51F43D7D6005B2E39 /* CorePlot.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9B79D41F43D7D6005B2E39 /* CorePlot.framework */; };
 		9F9B79D71F43DA34005B2E39 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9B79D61F43DA34005B2E39 /* QuartzCore.framework */; };
@@ -35,6 +36,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		9F9288F62060BE1900B42F4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 754BE45519693E190098E6F3;
+			remoteInfo = CryptoSwift;
+		};
+		9F9288F82060BE1900B42F4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 754BE46019693E190098E6F3;
+			remoteInfo = Tests;
+		};
+		9F9288FE2060BF4900B42F4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 754BE45419693E190098E6F3;
+			remoteInfo = CryptoSwift;
+		};
 		9FCA102E1F21C44900F37C51 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9FCA10111F21C44900F37C51 /* Project object */;
@@ -51,6 +73,20 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		9F9289002060BF4900B42F4D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				9F9288FD2060BF4900B42F4D /* CryptoSwift.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		01526D908663F5C2E42A3A97 /* Pods_DevAppBetaTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DevAppBetaTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DC7F3A3421D9BAFBA0E1A72 /* Pods-DevAppBeta.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DevAppBeta.release.xcconfig"; path = "Pods/Target Support Files/Pods-DevAppBeta/Pods-DevAppBeta.release.xcconfig"; sourceTree = "<group>"; };
@@ -60,11 +96,13 @@
 		9F11A00620315A58009F9845 /* dsvSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dsvSensor.swift; sourceTree = "<group>"; };
 		9F11A0082032A202009F9845 /* PrimitivesScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimitivesScene.swift; sourceTree = "<group>"; };
 		9F27F24E1FA2E4F100E81F58 /* BLEFuncNaviView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEFuncNaviView.swift; sourceTree = "<group>"; };
-		9F504D251F99BAB5002BDBD3 /* crc32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = crc32.swift; sourceTree = "<group>"; };
 		9F6A2E381F271114003D9E4C /* globalVars.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = globalVars.swift; sourceTree = "<group>"; };
 		9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomFileManager.swift; sourceTree = "<group>"; };
 		9F8830421F56961600A678CE /* FWUpgradeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWUpgradeViewController.swift; sourceTree = "<group>"; };
 		9F8830461F60BDA700A678CE /* firmware */ = {isa = PBXFileReference; lastKnownFileType = folder; path = firmware; sourceTree = "<group>"; };
+		9F9288DC2060BC8C00B42F4D /* CryptoSwift */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = CryptoSwift; path = cryptoSwift/CryptoSwift.framework/CryptoSwift; sourceTree = "<group>"; };
+		9F9288DE2060BC9C00B42F4D /* CryptoSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoSwift.framework; path = cryptoSwift/CryptoSwift.framework; sourceTree = "<group>"; };
+		9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CryptoSwift.xcodeproj; path = "CryptoSwift-0.8.3/CryptoSwift.xcodeproj"; sourceTree = "<group>"; };
 		9F96F992202BD38B00D8A804 /* BLEConfigViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEConfigViewController.swift; sourceTree = "<group>"; };
 		9F9B79D01F43CF9D005B2E39 /* DevAppBeta-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DevAppBeta-Bridging-Header.h"; sourceTree = "<group>"; };
 		9F9B79D41F43D7D6005B2E39 /* CorePlot.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CorePlot.framework; path = "../../../../../Library/Developer/Xcode/DerivedData/DevAppBeta-cvdkgiggcczbzuhkzdazbleajujw/Build/Products/Debug-iphoneos/CorePlot/CorePlot.framework"; sourceTree = "<group>"; };
@@ -100,6 +138,7 @@
 				9F9B79D71F43DA34005B2E39 /* QuartzCore.framework in Frameworks */,
 				9F9B79D51F43D7D6005B2E39 /* CorePlot.framework in Frameworks */,
 				C1F4B4106CFB467727BEC0E2 /* Pods_DevAppBeta.framework in Frameworks */,
+				9F9288FC2060BF4900B42F4D /* CryptoSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,6 +177,8 @@
 		889FE069173606DD7AA113E3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9F9288DE2060BC9C00B42F4D /* CryptoSwift.framework */,
+				9F9288DC2060BC8C00B42F4D /* CryptoSwift */,
 				9F9B79D61F43DA34005B2E39 /* QuartzCore.framework */,
 				9F9B79D41F43D7D6005B2E39 /* CorePlot.framework */,
 				2511AB968CC8A3415669CDA8 /* Pods_DevAppBeta.framework */,
@@ -147,9 +188,19 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		9F9288F22060BE1900B42F4D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9F9288F72060BE1900B42F4D /* CryptoSwift.framework */,
+				9F9288F92060BE1900B42F4D /* Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		9FCA10101F21C44800F37C51 = {
 			isa = PBXGroup;
 			children = (
+				9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */,
 				9FCA101B1F21C44900F37C51 /* DevAppBeta */,
 				9FCA10301F21C44900F37C51 /* DevAppBetaTests */,
 				9FCA103B1F21C44900F37C51 /* DevAppBetaUITests */,
@@ -181,7 +232,6 @@
 				9F6A2E3A1F2841E5003D9E4C /* CustomFileManager.swift */,
 				9FCA104C1F21C4F400F37C51 /* BLEController.swift */,
 				9F6A2E381F271114003D9E4C /* globalVars.swift */,
-				9F504D251F99BAB5002BDBD3 /* crc32.swift */,
 				9FCA104E1F21D4CF00F37C51 /* AttitudeEstimate.swift */,
 				9F96F992202BD38B00D8A804 /* BLEConfigViewController.swift */,
 				9F27F24E1FA2E4F100E81F58 /* BLEFuncNaviView.swift */,
@@ -227,10 +277,12 @@
 				9FCA10171F21C44900F37C51 /* Resources */,
 				E1053E7A877BA1D9B76810ED /* [CP] Embed Pods Frameworks */,
 				0185F11B1F6B62B7B25579F3 /* [CP] Copy Pods Resources */,
+				9F9289002060BF4900B42F4D /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9F9288FF2060BF4900B42F4D /* PBXTargetDependency */,
 			);
 			name = DevAppBeta;
 			productName = DevAppBeta;
@@ -322,6 +374,12 @@
 			mainGroup = 9FCA10101F21C44800F37C51;
 			productRefGroup = 9FCA101A1F21C44900F37C51 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 9F9288F22060BE1900B42F4D /* Products */;
+					ProjectRef = 9F9288F12060BE1900B42F4D /* CryptoSwift.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				9FCA10181F21C44900F37C51 /* DevAppBeta */,
@@ -330,6 +388,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		9F9288F72060BE1900B42F4D /* CryptoSwift.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CryptoSwift.framework;
+			remoteRef = 9F9288F62060BE1900B42F4D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		9F9288F92060BE1900B42F4D /* Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Tests.xctest;
+			remoteRef = 9F9288F82060BE1900B42F4D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9FCA10171F21C44900F37C51 /* Resources */ = {
@@ -525,7 +600,6 @@
 				9F27F24F1FA2E4F100E81F58 /* BLEFuncNaviView.swift in Sources */,
 				9F8830431F56961600A678CE /* FWUpgradeViewController.swift in Sources */,
 				9FCA101F1F21C44900F37C51 /* ViewController.swift in Sources */,
-				9F504D261F99BAB5002BDBD3 /* crc32.swift in Sources */,
 				9FCA104F1F21D4CF00F37C51 /* AttitudeEstimate.swift in Sources */,
 				9FCA101D1F21C44900F37C51 /* AppDelegate.swift in Sources */,
 			);
@@ -550,6 +624,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		9F9288FF2060BF4900B42F4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CryptoSwift;
+			targetProxy = 9F9288FE2060BF4900B42F4D /* PBXContainerItemProxy */;
+		};
 		9FCA102F1F21C44900F37C51 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9FCA10181F21C44900F37C51 /* DevAppBeta */;
@@ -699,12 +778,21 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2016EC7E3400C729B01DB49A /* Pods-DevAppBeta.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = T29ML8YF33;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/cryptoSwift",
+				);
 				INFOPLIST_FILE = DevAppBeta/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/cryptoSwift/CryptoSwift.framework",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whliu.DevAppBeta;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "DevAppBeta/DevAppBeta-Bridging-Header.h";
@@ -718,12 +806,21 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0DC7F3A3421D9BAFBA0E1A72 /* Pods-DevAppBeta.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = T29ML8YF33;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/cryptoSwift",
+				);
 				INFOPLIST_FILE = DevAppBeta/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/cryptoSwift/CryptoSwift.framework",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whliu.DevAppBeta;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "DevAppBeta/DevAppBeta-Bridging-Header.h";

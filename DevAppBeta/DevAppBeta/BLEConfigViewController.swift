@@ -24,7 +24,6 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
     private let voidAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil)
     
     @IBAction func applyConfigBtnClk(_ sender: Any) {
-        print("[TEMPDEBUG]\(self.accScalePV.selectedRow(inComponent: 0))")
         let acc_gyro_freq_cmd = self.acc_gyro_freq_cmdArr[self.accFreqPV.selectedRow(inComponent: 0)]
         let magFreq_cmd = self.mag_freq_cmdArr[self.magFreqPV.selectedRow(inComponent: 0)]
         let accScale_cmd = self.acc_Scale_cmdArr[self.accScalePV.selectedRow(inComponent: 0)]

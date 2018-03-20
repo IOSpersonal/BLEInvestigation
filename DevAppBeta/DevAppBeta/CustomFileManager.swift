@@ -106,14 +106,18 @@ class CustomFileManager: NSObject {
         let docsURL = dirpaths[0]
         let docsFolder = docsURL.appendingPathComponent("firmware").path
         let path = docsFolder + "/" + filename
+        var inputBuffer = [UInt8]()
         if fileManager.fileExists(atPath: path){
-            print("[DEBUG] reading firmware file into UInt8 array, from path: \(path)")
+            print("[DEBUG] reading firmware file (\(filename) into UInt8 array, from path: \(path)")
+            let inputStream = InputStream(fileAtPath: path)
+            inputStream?.open()
+            inputBuffer = [UInt8](repeating: 0, count: globalVariables.firmwareBufferLen)
+            inputStream?.read(&inputBuffer, maxLength: inputBuffer.count)
+            inputStream?.close()
         }
-        let inputStream = InputStream(fileAtPath: path)
-        inputStream?.open()
-        var inputBuffer = [UInt8](repeating: 0, count: 158404)
-        inputStream?.read(&inputBuffer, maxLength: inputBuffer.count)
-        inputStream?.close()
+        else{
+            print("[DEBUG] file does not exist")
+        }
         return inputBuffer
     }
     

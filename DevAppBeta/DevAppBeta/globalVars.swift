@@ -19,6 +19,8 @@ struct globalVariables {
     static var monitorTypeFlag = true
     static var EKFshouldPerformAttitudeEstimate = false
     //FW update maximum transfer size
+    static let firmwareFileName = "FW6c.bin"
+    static let firmwareBufferLen = 135748
     static let maxTransferUnit = 63
     static var currentNumOfDevice = 0
     //configs

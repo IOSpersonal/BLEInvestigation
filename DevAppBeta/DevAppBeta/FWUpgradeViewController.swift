@@ -142,7 +142,7 @@ class FWUpgradeViewController: UIViewController {
         print("[DEBUG] update FW button click event")
         self.updateFWProgressBar.setProgress(0.0, animated: false)
         self.updateFWProgressPercentageLabel.text = "0%"
-        _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: "FW6c.2.12602_MDM6c.3.bin")
+        _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: globalVariables.firmwareFileName)
     }
     @IBAction func AttitudeEstimationBtnClk(_ sender: Any) {
         if globalVariables.EKFshouldPerformAttitudeEstimate{

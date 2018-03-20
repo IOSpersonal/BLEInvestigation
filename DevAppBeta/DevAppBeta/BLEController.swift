@@ -8,6 +8,7 @@
 
 import UIKit
 import Foundation
+import CryptoSwift
 import CoreBluetooth
 
 protocol BLEDelegate {
@@ -93,6 +94,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     public       var isServingStreamStart   = false
     //buffer for updating firmware binary
     private      var FWBuf                  = [UInt8]()
+    private      var crccmd                 = [UInt8]()
     
     override init() {
         if !self.isInitialised{
@@ -383,8 +385,10 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
         //open fw file
         self.FWBuf = globalVariables.FileHandler.openFWBinFile(filename: filename)
-        print("[DEBUG] read Firmware Bin file, length: \(FWBuf.count), first and last values: \(FWBuf[0]), \(FWBuf[FWBuf.count-1])")
-        let cmd = Data.init(bytes: [0x02, 0x00, 0x00])
+        let crc = self.FWBuf.crc32()
+        self.crccmd = crc.toByteArr(endian: crc.littleEndian, count: 4)
+        print("[DEBUG] read Firmware Bin file, length: \(FWBuf.count), first and last values: \(FWBuf[0]), \(FWBuf[FWBuf.count-1]), crc: \(crccmd)")
+        let cmd = Data.init(bytes: [0x01, 0x00, 0x00])
         for sensor in self.connectedSensors{
             guard let char = sensor.characteristics[FWUPDATE_CONTROL_POINT_UUID] else {return false}
             print("[DEBUG] writing control point for \(sensor.name)")
@@ -623,15 +627,14 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             if sensor.FWWriteCounter + globalVariables.maxTransferUnit > FWBuf.count{
                 if sensor.FWUpgradeShouldSendCRC{
                     sensor.FWUpgradeShouldSendCRC = false
-                    let crc32Calculator = CRC32.init(data: Data.init(bytes: FWBuf))
-                    print("[DEBUG] sending crc, calculated as \(crc32Calculator.hashValue)")
-                    let data = Data.init(bytes: crc32Calculator.crc.toBytes)
+                    let data = Data.init(bytes: self.crccmd)
                     let char = sensor.characteristics[FWUPDATE_CRC_INPUT_UUID]
                     peripheral.writeValue(data, for: char!, type: .withResponse)
                     
                 }
                 else{
                     print("[DEBUG] sending last byte")
+                    self.FWUpgradeViewController?.updateFWProgressPercentageLabel.text = "100%"
                     var packet_array = Array.init(repeating: UInt8(0), count: globalVariables.maxTransferUnit + 1)
                     let len = FWBuf.count - sensor.FWWriteCounter
                     packet_array[0] = UInt8(sensor.upCounters)
@@ -643,12 +646,13 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 }
             }
             else {
+                //normal step
                 let packet_array = [UInt8(sensor.upCounters)] + FWBuf[sensor.FWWriteCounter...sensor.FWWriteCounter + globalVariables.maxTransferUnit - 1]
                 let packet = Data.init(bytes: packet_array)
-                let percentageValue = Float(sensor.FWWriteCounter/self.FWBuf.count)
-                self.FWUpgradeViewController?.updateFWProgressBar.setProgress(percentageValue, animated: true)
+                let percentageValue = 100.0*Float(sensor.FWWriteCounter)/Float(self.FWBuf.count)
+                self.FWUpgradeViewController?.updateFWProgressBar.setProgress(percentageValue/100.0, animated: true)
                 self.FWUpgradeViewController?.updateFWProgressPercentageLabel.text = String(Int(percentageValue)) + "%"
-                print("[DEBUG] FWUpgradeStep: \(sensor.FWWriteCounter)/\(self.FWBuf.count), upCounter: \(sensor.upCounters), length: \(packet.count)")
+                print("[DEBUG] FWUpgradeStep: \(sensor.FWWriteCounter)/\(self.FWBuf.count), upCounter: \(sensor.upCounters), length: \(packet.count), progress: \(percentageValue)")
                 peripheral.writeValue(packet, for: characteristic, type: .withResponse)
                 sensor.upCounters += 1
                 sensor.FWWriteCounter += globalVariables.maxTransferUnit
