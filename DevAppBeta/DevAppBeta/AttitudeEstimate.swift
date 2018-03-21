@@ -2,7 +2,6 @@
 //  AttitudeEstimate.swift
 //  Using a QUEST Kalman Filter, with magnetometer data excluded
 //  DevAppBeta
-//
 //  Created by Weihang Liu on 21/7/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
@@ -10,6 +9,7 @@
 import Foundation
 import Accelerate
 
+// create power operator as ^^
 precedencegroup PowerPrecedence{higherThan: MultiplicationPrecedence}
 infix operator ^^ : PowerPrecedence
 func ^^ (radix: Double, power: Double) -> Double{

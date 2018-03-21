@@ -1,7 +1,7 @@
 //
 //  BLEViewController.swift
 //  DevAppBeta
-//
+//  BLE basic functions view: conatins basic operations for sensors: streaming/plotting/offloading data/disconnting etc.
 //  Created by Weihang Liu on 21/7/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
@@ -14,15 +14,14 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     @IBOutlet var streamDataLbl: UILabel!
     @IBOutlet var streamBtn: UIButton!
     @IBOutlet var showPlotBtn: UIButton!
-    
+    //CorePlot API
     @IBOutlet var graphView: CPTGraphHostingView!
-    
     var graph = CPTXYGraph(frame: CGRect.zero)
     var Ax_plot = Array(repeating: 0.0, count: 40)
     var Ay_plot = Array(repeating: 0.0, count: 40)
     var Az_plot = Array(repeating: 0.0, count: 40)
     var arrayCounter = 0;
-    
+    //UI Alerts
     private var offloadAlert = UIAlertController()
     private let monitorAlert = UIAlertController(title: "Start Monitoring", message: "\nInput a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)", preferredStyle: UIAlertControllerStyle.alert)
     private let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
@@ -36,9 +35,9 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        //pass UI to BLEController
         globalVariables.BLEHandler.passBLEView(view: self)
         self.updateStatus(value: globalVariables.appStatus)
-        // Do any additional setup after loading the view.
         //init alertview
         self.offloadAlert = UIAlertController(title: nil, message: "Offloading, Please wait...\n\n\n", preferredStyle: UIAlertControllerStyle.alert)
         let spinner = UIActivityIndicatorView.init(activityIndicatorStyle: UIActivityIndicatorViewStyle.whiteLarge)
@@ -170,7 +169,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     
     @IBAction func showPlotBtnClk(_ sender: Any) {
-    // show plot, disabling will accelerate streaming
+        //show plot while streaming
         self.viewcontrollerShouldShowPlot = !self.viewcontrollerShouldShowPlot
         if(self.viewcontrollerShouldShowPlot){
             self.showPlotBtn.setTitle("DISABLE PLOT", for: UIControlState.normal)
@@ -182,7 +181,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     
     @IBAction func dataSourceBtnClk(_ sender: Any) {
-        //change data source of graph view
+        //change data source of graph view - acc/gyro/mag/EMG
         let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace
         let axes = graph.axisSet as! CPTXYAxisSet
         let alert = UIAlertController(title: "Switch Data Source", message: "Please choose from below data source.", preferredStyle: UIAlertControllerStyle.alert)
@@ -250,12 +249,12 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     func numberOfRecords(for plot: CPTPlot) -> UInt {
-        //plot length
+        //plot length - CorePlot API built in
         return 30;
     }
     
     func number(for plot: CPTPlot, field fieldEnum: UInt, record idx: UInt) -> Any? {
-        //set value for plots
+        //set value for plots - CorePlot API built in
         let plotfield = CPTScatterPlotField(rawValue: Int(fieldEnum))
         let plotID = plot.identifier as! String
         if (plotfield == .Y) && (plotID == "x"){
@@ -292,6 +291,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     func confirmStreamingState(){
+        //Confirm streaming state to detect if the sensor is already streaming while connected
         if self.isStreaming == false && !self.isWaitingForStopStreaming{
             print("[DEBUG] one or more connected sensor is already streaming!")
             self.isStreaming = true
@@ -301,6 +301,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     @IBAction func startStreamBtnClk(_ sender: Any) {
+        // start streaming
         if !self.isStreaming{
             globalVariables.BLEHandler.startStreaming()
             self.updateStatus(value: "Streaming")
@@ -323,8 +324,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     func createSwitch () -> UISwitch{
-        
-        
+        // add switch for switching between running/low back monitoring
         let switchControl = UISwitch(frame:CGRect.init(x: 10, y: 20, width: 0, height: 0))
         switchControl.isOn = true
         switchControl.setOn(true, animated: false)
@@ -333,7 +333,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     @objc func switchValueDidChange(sender:UISwitch!){
-        
+        // call back on switch value changed
         print("[DEBUG] monitor session for normal : \(sender.isOn))")
         globalVariables.monitorTypeFlag = sender.isOn
         var message = "\nInput a monitor time in minutes (1-4320). \n(*If session time is larger than 3000 minutes, sensors will be forced into 20Hz/20Hz/0Hz)"
@@ -347,11 +347,13 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     @IBAction func monitorBtnClk(_ sender: Any) {
+        // start monitoring
         print("[DEBUG] monitor button clicked")
         self.present(self.monitorAlert, animated: true, completion: nil)
     }
     
     @IBAction func compressedDataOffloadBtnClk(_ sender: Any) {
+        // offload compressed data
         print("[DEBUG] compress data offload btn clicked")
         globalVariables.BLEHandler.offloadCompressedData()
         self.updateStatus(value: "offloading")
@@ -365,12 +367,14 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     }
     
     func showOffloadCompleteAlertWithDuration(duration: Double){
+        //call back on offload completed - show alert
         let alert = UIAlertController(title: "offload completed", message: "offload completed, elapsed time: \(duration)", preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "OK", style:UIAlertActionStyle.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func flushBtnClk(_ sender: Any) {
+        //flush document folder - everything will be deleted
         let alert = UIAlertController(title: "confirm flush", message: "are you sure to delete all files from document folder?", preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "confirm", style: UIAlertActionStyle.default, handler: { action in
             switch action.style{

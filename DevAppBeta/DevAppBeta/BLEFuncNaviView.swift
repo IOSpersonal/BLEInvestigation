@@ -1,7 +1,7 @@
 //
 //  BLEFuncNaviView.swift
 //  DevAppBeta
-//
+//  Navigation view - for switching between different views - Logic set in storyboard
 //  Created by Weihang Liu on 27/10/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //

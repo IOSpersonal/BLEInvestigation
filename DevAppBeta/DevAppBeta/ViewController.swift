@@ -1,7 +1,7 @@
 //
 //  ViewController.swift
 //  DevAppBeta
-//
+//  Initial view: for selecting and connecting to dsvSensor
 //  Created by Weihang Liu on 21/7/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
@@ -36,6 +36,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //scan button click event
     @IBAction func scanBtnClk(_ sender: Any) {
+        //scan for all peripherals that has prefix MDM-
         globalVariables.allSensorList.removeAll()
         _ = globalVariables.BLEHandler.startScanning(timeout: 5)
     }

@@ -1,7 +1,7 @@
 //
 //  dsvSensor.swift
 //  DevAppBeta
-//
+//  dsvSensor object saves reference of a connected sensor, include some initialisers for certain sensor functions
 //  Created by Weihang Liu on 12/2/18.
 //  Copyright © 2018 Weihang Liu. All rights reserved.
 //
@@ -21,7 +21,7 @@ class dsvSensor: NSObject {
     //bool flag for checking offload all finished including getting lost data
     public      var isOffloadCompleted     :Bool   = false
     
-    //config
+    //config as indices - check global variables for config values
     public      var accScales              :Int    = 1
     public      var gyroScales             :Int    = 1
     public      var acc_gyro_freq          :Int    = 1
@@ -44,6 +44,7 @@ class dsvSensor: NSObject {
     public      var characteristics        = [String : CBCharacteristic]()
     
     init(peripheral: CBPeripheral){
+        //initialisers for sensor object
         self.name = peripheral.name!
         self.peripheralRef = peripheral
         self.streamFileNames = self.name + "_stream.txt"
@@ -52,6 +53,7 @@ class dsvSensor: NSObject {
     }
     
     public func initOffload(){
+        //reset offload variables
         self.isOffloadFinished = false
         self.isOffloadCompleted = false
         self.lostSeqNums = [UInt16]()
@@ -60,7 +62,7 @@ class dsvSensor: NSObject {
     }
     
     public func initFWUpgrade(){
-        //remove previous reference
+        //reset FW update variables
         self.upCounters = 1
         self.FWWriteCounter = 0
         self.FWUpgradeShouldSendCRC = false

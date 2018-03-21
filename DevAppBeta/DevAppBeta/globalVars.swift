@@ -1,13 +1,14 @@
 //
 //  globalVars.swift
 //  DevAppBeta
-//
+//  All global variables and Object reference
 //  Created by Weihang Liu on 25/7/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
 
 import Foundation
 
+// global variables that saves all static variables/objectsxs
 struct globalVariables {
     static var appStatus = "uninitialised"
     static let BLEHandler = BLEController()
@@ -18,7 +19,8 @@ struct globalVariables {
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
     static var EKFshouldPerformAttitudeEstimate = false
-    //FW update maximum transfer size
+    //FW update variables
+    //FIXME*: currently I did not find a way to load bin file with 
     static let firmwareFileName = "FW6c.bin"
     static let firmwareBufferLen = 135748
     static let maxTransferUnit = 63

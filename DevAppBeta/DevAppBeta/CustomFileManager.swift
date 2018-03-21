@@ -1,7 +1,7 @@
 //
 //  FileManager.swift
 //  DevAppBeta
-//
+//  FileManager Customised for basic IO functions to help sensor with saving streamed data/offloaded data/time calibration (depreciated)/FW update
 //  Created by Weihang Liu on 26/7/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
@@ -40,11 +40,11 @@ class CustomFileManager: NSObject {
     }
     
     func writeFile(filename: String, text: String) {
+        // append text to file
         let dir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let path = dir.appendingPathComponent(filename)
         do {
             print("[DEBUG] writing to file: \(filename)")
-            //try text.write(to: path, atomically: true, encoding: .utf8)
             try (text + "\n").appendToURL(fileURL: path)
         } catch {
             print("[DEBUG] file write error, for filename: \(filename)")
@@ -81,6 +81,7 @@ class CustomFileManager: NSObject {
     }
     // function for copying default file to document folder
     func copyDefaultFile(){
+        // copy prestored firmware binary to doc folder
         print("[DEBUG] copy files to document folder")
         let fileManager = FileManager.default
         let dirpaths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)
@@ -99,8 +100,9 @@ class CustomFileManager: NSObject {
         }
     }
     
-    //function for read FW file into byte array
+    // function for read FW file into byte array
     func openFWBinFile(filename: String) -> [UInt8] {
+        // read firmware binary into memory for update
         let fileManager = FileManager.default
         let dirpaths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)
         let docsURL = dirpaths[0]
@@ -121,7 +123,7 @@ class CustomFileManager: NSObject {
         return inputBuffer
     }
     
-    //function for read file as String
+    // function for read file as String
     func readFileAsString(filename: String) -> String{
         let fileManager = FileManager.default
         let dirpaths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)
@@ -137,7 +139,7 @@ class CustomFileManager: NSObject {
         return text
     }
     
-    //function for checking if file exist
+    // function for checking if file exist
     func fileExist(filename: String) -> Bool {
         let fileManager = FileManager.default
         let dirpaths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)

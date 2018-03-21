@@ -31,12 +31,6 @@
  *  This is the designated initializer. The @ref axes array
  *  will contain two new axes with the following properties:
  *
- *  <table>
- *  <tr><td>@bold{Axis}</td><td>@link CPTAxis::coordinate coordinate @endlink</td><td>@link CPTAxis::tickDirection tickDirection @endlink</td></tr>
- *  <tr><td>@ref xAxis</td><td>#CPTCoordinateX</td><td>#CPTSignNegative</td></tr>
- *  <tr><td>@ref yAxis</td><td>#CPTCoordinateY</td><td>#CPTSignNegative</td></tr>
- *  </table>
- *
  *  @param newFrame The frame rectangle.
  *  @return The initialized CPTXYAxisSet object.
  **/

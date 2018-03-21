@@ -1,7 +1,7 @@
 //
 //  FWUpgradeViewController.swift
 //  DevAppBeta
-//
+//  Advanced function view: advanced opertaiton of dsvSensor object, including: synchronised monitoring/erase device/revert device/attitude estimation/time calibration (depreciated)/FW upgrade
 //  Created by Weihang Liu on 30/8/17.
 //  Copyright © 2017 Weihang Liu. All rights reserved.
 //
@@ -18,8 +18,10 @@ class FWUpgradeViewController: UIViewController {
     @IBOutlet var stopTimeCalBtn: UIButton!
     @IBOutlet var startTimeCalBtn: UIButton!
     @IBOutlet var statusLabel: UILabel!
+    // if this view is initialised
     private var isInitialsed = false
     private var boxscene = PrimitivesScene()
+    // UIAlert views
     private let monitorAlert = UIAlertController(title: "Synchronised Monitoring", message: "\nInput a monitor time in minutes (1-4320). \nsynchronised monitoring current supports two sensors only", preferredStyle: UIAlertControllerStyle.alert)
     private let voidAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil)
     
@@ -29,7 +31,7 @@ class FWUpgradeViewController: UIViewController {
             self.initialiseFWUpgradeViewController()
             self.isInitialsed = true
         }
-        // Do any additional setup after loading the view.
+        // time calibrations depreciated - UICurrentMediaTime() not accurate enough
         self.stopTimeCalBtn.isEnabled = false
         self.startTimeCalBtn.isEnabled = false
     }
@@ -96,6 +98,7 @@ class FWUpgradeViewController: UIViewController {
         return UIInterfaceOrientation.portrait
     }
     func syncMonitorDidCalculateDelay(delay: Double, message: String){
+        // synchronised monitoring delay calculated
         self.statusLabel.text = "Status: sync delay: \(delay)ms"
         let monitorSuccessAlert = UIAlertController(title: "started monitoring", message: message, preferredStyle: UIAlertControllerStyle.alert)
         monitorSuccessAlert.addAction(self.voidAction)
@@ -107,10 +110,12 @@ class FWUpgradeViewController: UIViewController {
     }
     
     @IBAction func syncMonitorBtnClk(_ sender: Any) {
+        // synchronised monitoring supports 2 sensor only
         print("[DEBUG] synchronised monitoring button click event")
         self.present(self.monitorAlert, animated: true, completion: nil)
     }
     @IBAction func revertBtnClk(_ sender: Any) {
+        // revert sensor in failsafe to application
         print("[DEBUG] revert device button click event")
         let success = globalVariables.BLEHandler.revertDevices()
         if success{
@@ -118,6 +123,7 @@ class FWUpgradeViewController: UIViewController {
         }
     }
     @IBAction func eraseDeviceBtnClk(_ sender: Any) {
+        // reboot sensor into failsafe
         print("[DEBUG] erase device button click event")
         let success = globalVariables.BLEHandler.eraseDevices()
         if(success){
@@ -125,6 +131,7 @@ class FWUpgradeViewController: UIViewController {
         }
     }
     @IBAction func stopTimeCalBtnClk(_ sender: Any) {
+        // depreciated
         print("[DEBUG] stop time calibration button click event")
         let success = globalVariables.BLEHandler.stopTimeCalibration()
         if(success){
@@ -132,6 +139,7 @@ class FWUpgradeViewController: UIViewController {
         }
     }
     @IBAction func startTimeCalBtnClk(_ sender: Any) {
+        // depreciated
         print("[DEBUG] start time calibration button click event")
         let success = globalVariables.BLEHandler.startTimeCalibration()
         if success{
@@ -139,12 +147,14 @@ class FWUpgradeViewController: UIViewController {
         }
     }
     @IBAction func upgradeFWBtnClk(_ sender: Any) {
+        // start FW UPgrade with prestored file
         print("[DEBUG] update FW button click event")
         self.updateFWProgressBar.setProgress(0.0, animated: false)
         self.updateFWProgressPercentageLabel.text = "0%"
         _ = globalVariables.BLEHandler.startUpdateFWWithFile(filename: globalVariables.firmwareFileName)
     }
     @IBAction func AttitudeEstimationBtnClk(_ sender: Any) {
+        // enable attitude estimation and 3D display
         if globalVariables.EKFshouldPerformAttitudeEstimate{
             globalVariables.EKFshouldPerformAttitudeEstimate = false
             self.AEBtn.setTitle("Enable Attitude Estimate", for: .normal)
