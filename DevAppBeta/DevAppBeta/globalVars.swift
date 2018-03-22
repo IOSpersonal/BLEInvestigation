@@ -16,6 +16,8 @@ struct globalVariables {
     static let FileHandler = CustomFileManager()
     //maximum device to pair with
     static let MaxNumOfDevice = 5
+    //graph x axis length
+    static let MaxPlotBufferLength = 200
     //monitor type - true for normal, false for running
     static var monitorTypeFlag = true
     static var EKFshouldPerformAttitudeEstimate = false

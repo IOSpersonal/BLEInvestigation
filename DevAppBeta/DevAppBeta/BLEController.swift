@@ -87,6 +87,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     //var for calculating offload time
     private      var timeOffloadStarted     = 0.0
+    //running monitoring data - for showing plot
+    private      var runningMonitoringData  = [Double]()
 
     //current connected peripheral count
     private      var peripheralCount        = 0
@@ -291,6 +293,8 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         // sensor send offload compressed data command
         print("[DEBUG] BLEController start offload for \(self.connectedSensors.count) sensors")
         self.timeOffloadStarted = CACurrentMediaTime()
+        // length 40 array for showing plot after offloading
+        self.runningMonitoringData = [Double]()
         for sensor in self.connectedSensors{
             sensor.initOffload()
             let data = Data(bytes: [0x06])
@@ -797,6 +801,19 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         let strvalue = datavalue?.hexEncodedString()
         //update status bar to see data coming, comment to accelerate offload
         self.BLEViewController?.updateStreamDataLbl(value: strvalue! + ", from device: " + peripheral.name!)
+        //put value into plot buffer
+        if self.runningMonitoringData.count<globalVariables.MaxPlotBufferLength{
+            let sensorData = [UInt8](datavalue!)
+            for i in 3...sensorData.count - 1{
+                let value = (Double(sensorData[i]) - 127.0) / 254 * 16
+                if value != 0{
+                    self.runningMonitoringData.append(value)
+                }
+                if self.runningMonitoringData.count == globalVariables.MaxPlotBufferLength{
+                    break
+                }
+            }
+        }
         do{let sensor = try getSensorByName(name: peripheral.name!)
         if(sensor.isOffloadFinished) {
             //lost data fetched response
@@ -835,7 +852,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     self.BLEViewController?.dismissOffloadSpinner()
                     let offloadEndTime = CACurrentMediaTime()
                     let offloadDuration = offloadEndTime - self.timeOffloadStarted
-                    self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration)
+                    self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration, data: self.runningMonitoringData)
                 }
             }
         }
@@ -873,7 +890,7 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     self.BLEViewController?.dismissOffloadSpinner()
                     let offloadEndTime = CACurrentMediaTime()
                     let offloadDuration = offloadEndTime - self.timeOffloadStarted
-                    self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration)
+                    self.BLEViewController?.showOffloadCompleteAlertWithDuration(duration: offloadDuration,data: self.runningMonitoringData)
                 }
             }
             
@@ -1010,21 +1027,21 @@ class BLEController: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 }
                 //show plot only for first device
                 if sensor == self.connectedSensors[0]{
-                    if (self.BLEViewController?.arrayCounter)! < 40 {
+                    if (self.BLEViewController?.arrayCounter)! < globalVariables.MaxPlotBufferLength {
                         self.BLEViewController?.Ax_plot[(self.BLEViewController?.arrayCounter)!] = fx
                         self.BLEViewController?.Ay_plot[(self.BLEViewController?.arrayCounter)!] = fy
                         self.BLEViewController?.Az_plot[(self.BLEViewController?.arrayCounter)!] = fz
                         self.BLEViewController?.arrayCounter += 1
                     }
                     else{
-                        for i in 0...38{
+                        for i in 0...(globalVariables.MaxPlotBufferLength-2){
                             self.BLEViewController?.Ax_plot[i] = (self.BLEViewController?.Ax_plot[i + 1])!
                             self.BLEViewController?.Ay_plot[i] = (self.BLEViewController?.Ay_plot[i + 1])!
                             self.BLEViewController?.Az_plot[i] = (self.BLEViewController?.Az_plot[i + 1])!
                         }
-                        self.BLEViewController?.Ax_plot[39] = fx
-                        self.BLEViewController?.Ay_plot[39] = fy
-                        self.BLEViewController?.Az_plot[39] = fz
+                        self.BLEViewController?.Ax_plot[globalVariables.MaxPlotBufferLength-1] = fx
+                        self.BLEViewController?.Ay_plot[globalVariables.MaxPlotBufferLength-1] = fy
+                        self.BLEViewController?.Az_plot[globalVariables.MaxPlotBufferLength-1] = fz
                     }
                     let curTime = UInt32(CACurrentMediaTime()*1000)
                     let gap = curTime - self.lastReloadTime

@@ -10,6 +10,7 @@ import UIKit
 import CorePlot
 
 class BLEViewController: UIViewController, CPTScatterPlotDataSource{
+
     @IBOutlet var statusLabel: UILabel!
     @IBOutlet var streamDataLbl: UILabel!
     @IBOutlet var streamBtn: UIButton!
@@ -17,9 +18,9 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     //CorePlot API
     @IBOutlet var graphView: CPTGraphHostingView!
     var graph = CPTXYGraph(frame: CGRect.zero)
-    var Ax_plot = Array(repeating: 0.0, count: 40)
-    var Ay_plot = Array(repeating: 0.0, count: 40)
-    var Az_plot = Array(repeating: 0.0, count: 40)
+    var Ax_plot = Array(repeating: 0.0, count: globalVariables.MaxPlotBufferLength)
+    var Ay_plot = Array(repeating: 0.0, count: globalVariables.MaxPlotBufferLength)
+    var Az_plot = Array(repeating: 0.0, count: globalVariables.MaxPlotBufferLength)
     var arrayCounter = 0;
     //UI Alerts
     private var offloadAlert = UIAlertController()
@@ -32,9 +33,18 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     var isWaitingForStopStreaming = false
     //graph view data type 0 for acc, 1 for gyro 2 for mag, 3 for EMG
     var graphViewDataType:Int = 0
+    //initialse flag
+    private var initialised = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        if !self.initialised{
+            self.initialise()
+            self.initialised = true
+        }
+    }
+    
+    func initialise(){
         //pass UI to BLEController
         globalVariables.BLEHandler.passBLEView(view: self)
         self.updateStatus(value: globalVariables.appStatus)
@@ -62,19 +72,20 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace
         plotSpace.allowsUserInteraction = false
         plotSpace.yRange = CPTPlotRange(location: -5.0, length: 10.0)
-        plotSpace.xRange = CPTPlotRange(location: -5.0, length: 32.0)
+        plotSpace.xRange = CPTPlotRange(location: -5.0, length: NSNumber.init(value: globalVariables.MaxPlotBufferLength))
         
         
         
         if let x = axes.xAxis{
-            x.majorIntervalLength = 5.0
+            let MajIL = Double(globalVariables.MaxPlotBufferLength)/5.0
+            x.majorIntervalLength = NSNumber.init(value: MajIL)
             x.orthogonalPosition = 0.0
-            x.minorTicksPerInterval = 4
+            x.minorTicksPerInterval = 0
             x.minorTickLineStyle = lineStyle
             x.labelExclusionRanges = [
                 CPTPlotRange(location: -0.01, length: 0.02),
             ]
- 
+            
         }
         
         if let y = axes.yAxis{
@@ -167,7 +178,6 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         }))
     }
     
-    
     @IBAction func showPlotBtnClk(_ sender: Any) {
         //show plot while streaming
         self.viewcontrollerShouldShowPlot = !self.viewcontrollerShouldShowPlot
@@ -250,7 +260,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
     
     func numberOfRecords(for plot: CPTPlot) -> UInt {
         //plot length - CorePlot API built in
-        return 30;
+        return UInt(globalVariables.MaxPlotBufferLength);
     }
     
     func number(for plot: CPTPlot, field fieldEnum: UInt, record idx: UInt) -> Any? {
@@ -258,7 +268,7 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         let plotfield = CPTScatterPlotField(rawValue: Int(fieldEnum))
         let plotID = plot.identifier as! String
         if (plotfield == .Y) && (plotID == "x"){
-            if( idx>=0 )&&( idx<40 ){
+            if( idx>=0 )&&( idx<globalVariables.MaxPlotBufferLength ){
                 return self.Ax_plot[Int(idx)]
             }
             else{
@@ -266,14 +276,14 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
             }
         }
         else if(plotfield == .Y) && (plotID == "y"){
-            if( idx>=0 )&&( idx<40 ){
+            if( idx>=0 )&&( idx<globalVariables.MaxPlotBufferLength ){
                 return self.Ay_plot[Int(idx)]
             }
             else{
                 return 0
             }
         }else if(plotfield == .Y) && (plotID == "z"){
-            if( idx>=0 )&&( idx<40 ){
+            if( idx>=0 )&&( idx<globalVariables.MaxPlotBufferLength ){
                 return self.Az_plot[Int(idx)]
             }
             else{
@@ -366,8 +376,28 @@ class BLEViewController: UIViewController, CPTScatterPlotDataSource{
         self.offloadAlert.dismiss(animated: false, completion: nil)
     }
     
-    func showOffloadCompleteAlertWithDuration(duration: Double){
-        //call back on offload completed - show alert
+    func showOffloadCompleteAlertWithDuration(duration: Double, data: [Double]){
+        //call back on offload completed - update graph
+        print("[DEBUG] showing first few sample of running Monitoring data")
+        let plotSpace = graph.defaultPlotSpace as! CPTXYPlotSpace
+        let axes = graph.axisSet as! CPTXYAxisSet
+        plotSpace.globalYRange = nil
+        plotSpace.yRange = CPTPlotRange(location: -20.0, length: 40.0)
+        plotSpace.globalYRange = plotSpace.yRange
+        if let y = axes.yAxis{
+            y.majorIntervalLength = 1.0
+            y.minorTicksPerInterval = 1
+            y.labelExclusionRanges = [
+                CPTPlotRange(location: -0.01, length: 0.02)
+            ]
+        }
+        var cursor = 0
+        for value in data{
+            self.Ay_plot[cursor] = value
+            cursor = cursor + 1
+        }
+        self.graph.reloadData()
+        // show alert
         let alert = UIAlertController(title: "offload completed", message: "offload completed, elapsed time: \(duration)", preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "OK", style:UIAlertActionStyle.default, handler: nil))
         self.present(alert, animated: true, completion: nil)

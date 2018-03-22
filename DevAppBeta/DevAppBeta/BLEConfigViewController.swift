@@ -132,6 +132,8 @@ class BLEConfigViewController: UIViewController,UIPickerViewDelegate,UIPickerVie
         print("[DEBUG] readInitialSelection called")
         self.accFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].acc_gyro_freq, inComponent: 0, animated: true)
         self.accScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].accScales, inComponent: 0, animated: true)
+        print(globalVariables.BLEHandler.connectedSensors[0].accScales)
+        print(globalVariables.accScaleArray[globalVariables.BLEHandler.connectedSensors[0].accScales])
         self.gyroScalePV.selectRow(globalVariables.BLEHandler.connectedSensors[0].gyroScales, inComponent: 0, animated: true)
         self.magFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].magFreq, inComponent: 0, animated: true)
         self.emgFreqPV.selectRow(globalVariables.BLEHandler.connectedSensors[0].emgFreq, inComponent: 0, animated: true)
